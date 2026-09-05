@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import logo from "@/assets/royal-square-logo.jpg.asset.json";
 import { btn, btnGhost, input, label } from "@/components/AppShell";
 import { audit, getDB, setSession, update } from "@/lib/store";
 
@@ -117,7 +116,11 @@ function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
-      <img src={logo.url} alt="Royal Square Financial logo" className="mb-6 h-16 w-auto" />
+      <img
+        src="/royal-square-logo.png"
+        alt="Royal Square Financial logo"
+        className="mb-6 h-16 w-auto"
+      />
       <div className="card-surface w-full max-w-md p-6">
         <h1 className="text-xl font-bold">Client & Adviser Portal</h1>
         <p className="mt-1 text-sm text-muted-foreground">

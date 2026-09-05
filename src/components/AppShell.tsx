@@ -1,6 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import logo from "@/assets/royal-square-logo.jpg.asset.json";
 import {
   SESSION_TIMEOUT_MS,
   audit,
@@ -90,7 +89,11 @@ export function AppShell({
       <header className="sticky top-0 z-30 border-b border-border bg-card">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
           <Link to={session.role === "client" ? "/dashboard" : "/adviser"} className="flex items-center gap-2">
-            <img src={logo.url} alt="Royal Square Financial logo" className="h-10 w-auto" />
+            <img
+              src="/royal-square-logo.png"
+              alt="Royal Square Financial logo"
+              className="h-10 w-auto"
+            />
           </Link>
           <div className="ml-auto flex items-center gap-3">
             <div className="text-right leading-tight">

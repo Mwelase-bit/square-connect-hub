@@ -11,10 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdviserRouteImport } from './routes/adviser'
+import { Route as AuditRouteImport } from './routes/audit'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RemindersRouteImport } from './routes/reminders'
 import { Route as ClaimsIndexRouteImport } from './routes/claims.index'
+import { Route as ClaimsClaimIdRouteImport } from './routes/claims.$claimId'
 import { Route as ClaimsChecklistRouteImport } from './routes/claims.checklist'
+import { Route as ClaimsNewRouteImport } from './routes/claims.new'
+import { Route as AdviserClientsClientIdRouteImport } from './routes/adviser.clients.$clientId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -26,9 +33,19 @@ const AdviserRoute = AdviserRouteImport.update({
   path: '/adviser',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoalsRoute = GoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -36,9 +53,24 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RemindersRoute = RemindersRouteImport.update({
+  id: '/reminders',
+  path: '/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClaimsIndexRoute = ClaimsIndexRouteImport.update({
   id: '/claims/',
   path: '/claims/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimsClaimIdRoute = ClaimsClaimIdRouteImport.update({
+  id: '/claims/$claimId',
+  path: '/claims/$claimId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClaimsChecklistRoute = ClaimsChecklistRouteImport.update({
@@ -46,65 +78,123 @@ const ClaimsChecklistRoute = ClaimsChecklistRouteImport.update({
   path: '/claims/checklist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClaimsNewRoute = ClaimsNewRouteImport.update({
+  id: '/claims/new',
+  path: '/claims/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdviserClientsClientIdRoute = AdviserClientsClientIdRouteImport.update({
+  id: '/clients/$clientId',
+  path: '/clients/$clientId',
+  getParentRoute: () => AdviserRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/adviser': typeof AdviserRoute
+  '/adviser': typeof AdviserRouteWithChildren
+  '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
+  '/goals': typeof GoalsRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/reminders': typeof RemindersRoute
+  '/claims/$claimId': typeof ClaimsClaimIdRoute
   '/claims/checklist': typeof ClaimsChecklistRoute
+  '/claims/new': typeof ClaimsNewRoute
   '/claims/': typeof ClaimsIndexRoute
+  '/adviser/clients/$clientId': typeof AdviserClientsClientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/adviser': typeof AdviserRoute
+  '/adviser': typeof AdviserRouteWithChildren
+  '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
+  '/goals': typeof GoalsRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/reminders': typeof RemindersRoute
+  '/claims/$claimId': typeof ClaimsClaimIdRoute
   '/claims/checklist': typeof ClaimsChecklistRoute
+  '/claims/new': typeof ClaimsNewRoute
   '/claims': typeof ClaimsIndexRoute
+  '/adviser/clients/$clientId': typeof AdviserClientsClientIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/adviser': typeof AdviserRoute
+  '/adviser': typeof AdviserRouteWithChildren
+  '/audit': typeof AuditRoute
   '/dashboard': typeof DashboardRoute
+  '/goals': typeof GoalsRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/reminders': typeof RemindersRoute
+  '/claims/$claimId': typeof ClaimsClaimIdRoute
   '/claims/checklist': typeof ClaimsChecklistRoute
+  '/claims/new': typeof ClaimsNewRoute
   '/claims/': typeof ClaimsIndexRoute
+  '/adviser/clients/$clientId': typeof AdviserClientsClientIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/adviser'
+    | '/audit'
     | '/dashboard'
+    | '/goals'
     | '/onboarding'
+    | '/profile'
+    | '/reminders'
+    | '/claims/$claimId'
     | '/claims/checklist'
+    | '/claims/new'
     | '/claims/'
+    | '/adviser/clients/$clientId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/adviser'
+    | '/audit'
     | '/dashboard'
+    | '/goals'
     | '/onboarding'
+    | '/profile'
+    | '/reminders'
+    | '/claims/$claimId'
     | '/claims/checklist'
+    | '/claims/new'
     | '/claims'
+    | '/adviser/clients/$clientId'
   id:
     | '__root__'
     | '/'
     | '/adviser'
+    | '/audit'
     | '/dashboard'
+    | '/goals'
     | '/onboarding'
+    | '/profile'
+    | '/reminders'
+    | '/claims/$claimId'
     | '/claims/checklist'
+    | '/claims/new'
     | '/claims/'
+    | '/adviser/clients/$clientId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdviserRoute: typeof AdviserRoute
+  AdviserRoute: typeof AdviserRouteWithChildren
+  AuditRoute: typeof AuditRoute
   DashboardRoute: typeof DashboardRoute
+  GoalsRoute: typeof GoalsRoute
   OnboardingRoute: typeof OnboardingRoute
+  ProfileRoute: typeof ProfileRoute
+  RemindersRoute: typeof RemindersRoute
+  ClaimsClaimIdRoute: typeof ClaimsClaimIdRoute
   ClaimsChecklistRoute: typeof ClaimsChecklistRoute
+  ClaimsNewRoute: typeof ClaimsNewRoute
   ClaimsIndexRoute: typeof ClaimsIndexRoute
 }
 
@@ -124,11 +214,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdviserRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goals': {
+      id: '/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof GoalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -138,11 +242,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reminders': {
+      id: '/reminders'
+      path: '/reminders'
+      fullPath: '/reminders'
+      preLoaderRoute: typeof RemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/claims/': {
       id: '/claims/'
       path: '/claims'
       fullPath: '/claims/'
       preLoaderRoute: typeof ClaimsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claims/$claimId': {
+      id: '/claims/$claimId'
+      path: '/claims/$claimId'
+      fullPath: '/claims/$claimId'
+      preLoaderRoute: typeof ClaimsClaimIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/claims/checklist': {
@@ -152,15 +277,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClaimsChecklistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/claims/new': {
+      id: '/claims/new'
+      path: '/claims/new'
+      fullPath: '/claims/new'
+      preLoaderRoute: typeof ClaimsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/adviser/clients/$clientId': {
+      id: '/adviser/clients/$clientId'
+      path: '/clients/$clientId'
+      fullPath: '/adviser/clients/$clientId'
+      preLoaderRoute: typeof AdviserClientsClientIdRouteImport
+      parentRoute: typeof AdviserRoute
+    }
   }
 }
 
+interface AdviserRouteChildren {
+  AdviserClientsClientIdRoute: typeof AdviserClientsClientIdRoute
+}
+
+const AdviserRouteChildren: AdviserRouteChildren = {
+  AdviserClientsClientIdRoute: AdviserClientsClientIdRoute,
+}
+
+const AdviserRouteWithChildren =
+  AdviserRoute._addFileChildren(AdviserRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdviserRoute: AdviserRoute,
+  AdviserRoute: AdviserRouteWithChildren,
+  AuditRoute: AuditRoute,
   DashboardRoute: DashboardRoute,
+  GoalsRoute: GoalsRoute,
   OnboardingRoute: OnboardingRoute,
+  ProfileRoute: ProfileRoute,
+  RemindersRoute: RemindersRoute,
+  ClaimsClaimIdRoute: ClaimsClaimIdRoute,
   ClaimsChecklistRoute: ClaimsChecklistRoute,
+  ClaimsNewRoute: ClaimsNewRoute,
   ClaimsIndexRoute: ClaimsIndexRoute,
 }
 export const routeTree = rootRouteImport
