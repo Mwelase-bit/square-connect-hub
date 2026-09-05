@@ -366,4 +366,3 @@ export const CLAIM_STAGES: { key: ClaimStatus; label: string }[] = [
   { key: "completed", label: "Completed" },
 ];
 
-export function role Label(): void {}
