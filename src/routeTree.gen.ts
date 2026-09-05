@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdviserRouteImport } from './routes/adviser'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ClaimsIndexRouteImport } from './routes/claims.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClaimsIndexRoute = ClaimsIndexRouteImport.update({
+  id: '/claims/',
+  path: '/claims/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/adviser': typeof AdviserRoute
   '/dashboard': typeof DashboardRoute
   '/onboarding': typeof OnboardingRoute
+  '/claims/': typeof ClaimsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/adviser': typeof AdviserRoute
   '/dashboard': typeof DashboardRoute
   '/onboarding': typeof OnboardingRoute
+  '/claims': typeof ClaimsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/adviser': typeof AdviserRoute
   '/dashboard': typeof DashboardRoute
   '/onboarding': typeof OnboardingRoute
+  '/claims/': typeof ClaimsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/adviser' | '/dashboard' | '/onboarding'
+  fullPaths: '/' | '/adviser' | '/dashboard' | '/onboarding' | '/claims/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/adviser' | '/dashboard' | '/onboarding'
-  id: '__root__' | '/' | '/adviser' | '/dashboard' | '/onboarding'
+  to: '/' | '/adviser' | '/dashboard' | '/onboarding' | '/claims'
+  id: '__root__' | '/' | '/adviser' | '/dashboard' | '/onboarding' | '/claims/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   AdviserRoute: typeof AdviserRoute
   DashboardRoute: typeof DashboardRoute
   OnboardingRoute: typeof OnboardingRoute
+  ClaimsIndexRoute: typeof ClaimsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/claims/': {
+      id: '/claims/'
+      path: '/claims'
+      fullPath: '/claims/'
+      preLoaderRoute: typeof ClaimsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdviserRoute: AdviserRoute,
   DashboardRoute: DashboardRoute,
   OnboardingRoute: OnboardingRoute,
+  ClaimsIndexRoute: ClaimsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
