@@ -124,9 +124,10 @@ function FormDialog({ type, onClose }: { type: FormType; onClose: () => void }) 
   const [busy, setBusy] = useState(false);
 
   const set = (k: string, v: string) => setValues((p) => ({ ...p, [k]: v }));
+  const v = (k: string) => values[k] ?? "";
 
   const submit = async () => {
-    if (!values.full_name || !values.email || !values.phone || !values.id_number) {
+    if (!v("full_name") || !v("email") || !v("phone") || !v("id_number")) {
       setError("Name, email, phone and ID number are required.");
       return;
     }
@@ -140,7 +141,7 @@ function FormDialog({ type, onClose }: { type: FormType; onClose: () => void }) 
     const pdf = await buildPdf(type, [
       ...Object.entries(data).map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v)}`),
       "",
-      `Signed electronically by ${values.full_name} (user ID ${session.userId})`,
+      `Signed electronically by ${v("full_name")} (user ID ${session.userId})`,
       `Timestamp: ${now.toLocaleString("en-ZA")}`,
     ]);
 
@@ -165,13 +166,13 @@ function FormDialog({ type, onClose }: { type: FormType; onClose: () => void }) 
       }
       // Auto-extract key data into the client profile — no manual re-entry.
       const c = db.clients.find((x) => x.id === session.userId)!;
-      c.name = values.full_name!;
-      c.email = values.email!;
-      c.phone = values.phone!;
-      c.address = values.address ?? "";
-      c.city = values.city ?? "";
-      c.postal_code = values.postal_code ?? "";
-      c.id_number = values.id_number!;
+      c.name = v("full_name");
+      c.email = v("email");
+      c.phone = v("phone");
+      c.address = v("address");
+      c.city = v("city");
+      c.postal_code = v("postal_code");
+      c.id_number = v("id_number");
       c.last_interaction = now.toISOString();
       c.profile_complete =
         db.forms.filter((f) => f.client_id === session.userId && f.signed).length >= FORM_TYPES.length;
@@ -188,16 +189,16 @@ function FormDialog({ type, onClose }: { type: FormType; onClose: () => void }) 
         <p className="mt-1 text-sm text-muted-foreground">{FORM_BLURB[type]}</p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <Field id="full_name" title="Full name" value={values.full_name!} onChange={set} />
-          <Field id="email" title="Email" value={values.email!} onChange={set} />
-          <Field id="phone" title="Phone" value={values.phone!} onChange={set} />
-          <Field id="id_number" title="ID number" value={values.id_number!} onChange={set} />
-          <Field id="address" title="Street address" value={values.address ?? ""} onChange={set} />
-          <Field id="city" title="City" value={values.city ?? ""} onChange={set} />
-          <Field id="postal_code" title="Postal code" value={values.postal_code ?? ""} onChange={set} />
+          <Field id="full_name" title="Full name" value={v("full_name")} onChange={set} />
+          <Field id="email" title="Email" value={v("email")} onChange={set} />
+          <Field id="phone" title="Phone" value={v("phone")} onChange={set} />
+          <Field id="id_number" title="ID number" value={v("id_number")} onChange={set} />
+          <Field id="address" title="Street address" value={v("address")} onChange={set} />
+          <Field id="city" title="City" value={v("city")} onChange={set} />
+          <Field id="postal_code" title="Postal code" value={v("postal_code")} onChange={set} />
           <div>
             <label className={label} htmlFor="adviser">Adviser assigned</label>
-            <select id="adviser" className={input} value={values.adviser} onChange={(e) => set("adviser", e.target.value)}>
+            <select id="adviser" className={input} value={v("adviser")} onChange={(e) => set("adviser", e.target.value)}>
               {getDB().advisers.map((a) => (
                 <option key={a.id}>{a.name}</option>
               ))}
@@ -205,7 +206,7 @@ function FormDialog({ type, onClose }: { type: FormType; onClose: () => void }) 
           </div>
           <div>
             <label className={label} htmlFor="comms_preference">Preferred communication</label>
-            <select id="comms_preference" className={input} value={values.comms_preference} onChange={(e) => set("comms_preference", e.target.value)}>
+            <select id="comms_preference" className={input} value={v("comms_preference")} onChange={(e) => set("comms_preference", e.target.value)}>
               <option>Email</option>
               <option>Phone call</option>
               <option>WhatsApp</option>
