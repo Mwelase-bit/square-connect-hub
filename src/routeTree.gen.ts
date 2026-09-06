@@ -16,6 +16,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ProvidersRouteImport } from './routes/providers'
 import { Route as RemindersRouteImport } from './routes/reminders'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as ClaimsIndexRouteImport } from './routes/claims.index'
@@ -57,6 +58,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProvidersRoute = ProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RemindersRoute = RemindersRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/goals': typeof GoalsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/providers': typeof ProvidersRoute
   '/reminders': typeof RemindersRoute
   '/requests': typeof RequestsRoute
   '/claims/$claimId': typeof ClaimsClaimIdRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/goals': typeof GoalsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/providers': typeof ProvidersRoute
   '/reminders': typeof RemindersRoute
   '/requests': typeof RequestsRoute
   '/claims/$claimId': typeof ClaimsClaimIdRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/goals': typeof GoalsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/providers': typeof ProvidersRoute
   '/reminders': typeof RemindersRoute
   '/requests': typeof RequestsRoute
   '/claims/$claimId': typeof ClaimsClaimIdRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/onboarding'
     | '/profile'
+    | '/providers'
     | '/reminders'
     | '/requests'
     | '/claims/$claimId'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/onboarding'
     | '/profile'
+    | '/providers'
     | '/reminders'
     | '/requests'
     | '/claims/$claimId'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/onboarding'
     | '/profile'
+    | '/providers'
     | '/reminders'
     | '/requests'
     | '/claims/$claimId'
@@ -203,6 +215,7 @@ export interface RootRouteChildren {
   GoalsRoute: typeof GoalsRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
+  ProvidersRoute: typeof ProvidersRoute
   RemindersRoute: typeof RemindersRoute
   RequestsRoute: typeof RequestsRoute
   ClaimsClaimIdRoute: typeof ClaimsClaimIdRoute
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/providers': {
+      id: '/providers'
+      path: '/providers'
+      fullPath: '/providers'
+      preLoaderRoute: typeof ProvidersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reminders': {
@@ -333,6 +353,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoalsRoute: GoalsRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
+  ProvidersRoute: ProvidersRoute,
   RemindersRoute: RemindersRoute,
   RequestsRoute: RequestsRoute,
   ClaimsClaimIdRoute: ClaimsClaimIdRoute,

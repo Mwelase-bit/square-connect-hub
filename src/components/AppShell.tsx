@@ -26,6 +26,7 @@ const staffNav = [
   { to: "/claims", label: "Claims" },
   { to: "/reminders", label: "Reminders" },
   { to: "/goals", label: "Goals" },
+  { to: "/providers", label: "Providers" },
   { to: "/requests", label: "Requests" },
   { to: "/audit", label: "Audit trail" },
   { to: "/profile", label: "Profile" },
