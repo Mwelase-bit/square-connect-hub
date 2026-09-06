@@ -137,12 +137,13 @@ function AdviserDashboard() {
           onChange={(e) => setQuery(e.target.value)}
         />
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[820px] text-left text-sm">
             <thead className="text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="py-2">Client</th>
+                <th>Net worth</th>
+                <th>Assets</th>
                 <th>Last interaction</th>
-                <th>Policies</th>
                 <th>Next reminder</th>
                 <th>Open claims</th>
               </tr>
@@ -151,17 +152,37 @@ function AdviserDashboard() {
               {filtered.map((c) => {
                 const next = reminders.filter((r) => r.client_id === c.id)[0];
                 const open = claims.filter((x) => x.client_id === c.id && x.status !== "completed").length;
+                const assets = db.policies.filter((p) => p.client_id === c.id);
                 return (
-                  <tr key={c.id} className="border-t border-border">
+                  <tr key={c.id} className="border-t border-border align-top">
                     <td className="py-3">
                       <Link to="/adviser/clients/$clientId" params={{ clientId: String(c.id) }} className="font-semibold text-primary">
                         {c.name}
                       </Link>
                     </td>
-                    <td>{new Date(c.last_interaction).toLocaleDateString("en-ZA")}</td>
-                    <td>{db.policies.filter((p) => p.client_id === c.id).length}</td>
-                    <td>{next ? new Date(next.due_date).toLocaleDateString("en-ZA") : "—"}</td>
-                    <td>{open}</td>
+                    <td className="py-3 font-semibold">{formatZAR(netWorth(c.id))}</td>
+                    <td className="py-3">
+                      {assets.length === 0 ? (
+                        <span className="text-muted-foreground">None on file</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {assets.map((p) => (
+                            <span
+                              key={p.id}
+                              className={
+                                "rounded-full px-2 py-0.5 text-xs font-semibold " +
+                                (p.kind === "investment" ? "bg-secondary text-secondary-foreground" : "bg-accent text-accent-foreground")
+                              }
+                            >
+                              {p.product}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3">{new Date(c.last_interaction).toLocaleDateString("en-ZA")}</td>
+                    <td className="py-3">{next ? new Date(next.due_date).toLocaleDateString("en-ZA") : "—"}</td>
+                    <td className="py-3">{open}</td>
                   </tr>
                 );
               })}

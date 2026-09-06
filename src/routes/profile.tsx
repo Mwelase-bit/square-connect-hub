@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
 import { useState } from "react";
 import { AppShell, Avatar, Card, btn, input, label } from "@/components/AppShell";
@@ -235,33 +235,222 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
         )}
       </Card>
 
-      <Card title="Address">
+      <AddressCard client={client} />
+      <BankDetailsCard client={client} />
+    </div>
+  );
+}
+
+type ClientRecord = ReturnType<typeof useDB>["clients"][number];
+
+function AddressCard({ client }: { client: ClientRecord }) {
+  const [editing, setEditing] = useState(false);
+  const [address, setAddress] = useState(client.address);
+  const [city, setCity] = useState(client.city);
+  const [postalCode, setPostalCode] = useState(client.postal_code);
+  const [error, setError] = useState("");
+
+  const startEdit = () => {
+    setAddress(client.address);
+    setCity(client.city);
+    setPostalCode(client.postal_code);
+    setError("");
+    setEditing(true);
+  };
+
+  const save = () => {
+    if (!address.trim() || !city.trim() || !postalCode.trim()) {
+      setError("Please complete all fields.");
+      return;
+    }
+    update((db) => {
+      const c = db.clients.find((x) => x.id === client.id);
+      if (c) {
+        c.address = address.trim();
+        c.city = city.trim();
+        c.postal_code = postalCode.trim();
+        c.last_interaction = new Date().toISOString();
+      }
+    });
+    audit("address_updated", "client", { clientId: client.id });
+    setError("");
+    setEditing(false);
+  };
+
+  return (
+    <Card title="Address" action={!editing && <button className={btn} onClick={startEdit}>Edit address</button>}>
+      {editing ? (
+        <div className="space-y-4">
+          <div>
+            <label className={label} htmlFor="addr_street">
+              Street address
+            </label>
+            <input id="addr_street" className={input} value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={label} htmlFor="addr_city">
+                City
+              </label>
+              <input id="addr_city" className={input} value={city} onChange={(e) => setCity(e.target.value)} />
+            </div>
+            <div>
+              <label className={label} htmlFor="addr_postal">
+                Postal code
+              </label>
+              <input id="addr_postal" className={input} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+            </div>
+          </div>
+          {error && <p className="text-sm font-medium text-danger">{error}</p>}
+          <div className="flex gap-3">
+            <button className={btn} onClick={save}>
+              Save address
+            </button>
+            <button
+              className="rounded-md border border-border bg-card px-4 py-3 text-sm font-semibold hover:bg-muted"
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
         <p className="text-sm font-medium">
           {client.address ? `${client.address}, ${client.city} ${client.postal_code}` : "No address on file."}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Address changes require adviser verification. Contact your adviser directly, or{" "}
-          <Link to="/requests" className="font-semibold text-primary underline">
-            request a consultation
-          </Link>
-          .
-        </p>
-      </Card>
+      )}
+    </Card>
+  );
+}
 
-      <Card title="Bank details">
+function BankDetailsCard({ client }: { client: ClientRecord }) {
+  const [editing, setEditing] = useState(false);
+  const [bankName, setBankName] = useState(client.bank_name);
+  const [accountNumber, setAccountNumber] = useState(client.bank_account_number);
+  const [branchCode, setBranchCode] = useState(client.bank_branch_code);
+  const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [sentCode, setSentCode] = useState("");
+  const [enteredCode, setEnteredCode] = useState("");
+
+  const startEdit = () => {
+    setBankName(client.bank_name);
+    setAccountNumber(client.bank_account_number);
+    setBranchCode(client.bank_branch_code);
+    setError("");
+    setVerifying(false);
+    setEnteredCode("");
+    setEditing(true);
+  };
+
+  const startVerification = () => {
+    if (!bankName.trim() || !accountNumber.trim() || !branchCode.trim()) {
+      setError("Please complete all fields.");
+      return;
+    }
+    setError("");
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    setSentCode(code);
+    setVerifying(true);
+  };
+
+  const confirmSave = () => {
+    if (enteredCode.trim() !== sentCode) {
+      setError("That verification code doesn't match.");
+      return;
+    }
+    update((db) => {
+      const c = db.clients.find((x) => x.id === client.id);
+      if (c) {
+        c.bank_name = bankName.trim();
+        c.bank_account_number = accountNumber.trim();
+        c.bank_branch_code = branchCode.trim();
+        c.last_interaction = new Date().toISOString();
+      }
+    });
+    audit("bank_details_updated", "client", { clientId: client.id });
+    setError("");
+    setVerifying(false);
+    setEditing(false);
+  };
+
+  return (
+    <Card title="Bank details" action={!editing && <button className={btn} onClick={startEdit}>Edit bank details</button>}>
+      {editing ? (
+        verifying ? (
+          <div className="space-y-4">
+            <p className="text-sm font-medium">
+              Bank changes need step-up verification. A code was sent to <strong>{client.email}</strong>:{" "}
+              <strong className="font-bold">{sentCode}</strong>
+            </p>
+            <div>
+              <label className={label} htmlFor="bank_verify_code">
+                Verification code
+              </label>
+              <input
+                id="bank_verify_code"
+                className={input}
+                value={enteredCode}
+                onChange={(e) => setEnteredCode(e.target.value)}
+                inputMode="numeric"
+              />
+            </div>
+            {error && <p className="text-sm font-medium text-danger">{error}</p>}
+            <div className="flex gap-3">
+              <button className={btn} onClick={confirmSave}>
+                Verify and save
+              </button>
+              <button
+                className="rounded-md border border-border bg-card px-4 py-3 text-sm font-semibold hover:bg-muted"
+                onClick={() => setEditing(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={label} htmlFor="bank_name">
+                  Bank name
+                </label>
+                <input id="bank_name" className={input} value={bankName} onChange={(e) => setBankName(e.target.value)} />
+              </div>
+              <div>
+                <label className={label} htmlFor="bank_acc">
+                  Account number
+                </label>
+                <input id="bank_acc" className={input} value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
+              </div>
+              <div>
+                <label className={label} htmlFor="bank_branch">
+                  Branch code
+                </label>
+                <input id="bank_branch" className={input} value={branchCode} onChange={(e) => setBranchCode(e.target.value)} />
+              </div>
+            </div>
+            {error && <p className="text-sm font-medium text-danger">{error}</p>}
+            <div className="flex gap-3">
+              <button className={btn} onClick={startVerification}>
+                Continue to verification
+              </button>
+              <button
+                className="rounded-md border border-border bg-card px-4 py-3 text-sm font-semibold hover:bg-muted"
+                onClick={() => setEditing(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )
+      ) : (
         <p className="text-sm font-medium">
           {client.bank_name
             ? `${client.bank_name} · account ${client.bank_account_number} · branch ${client.bank_branch_code}`
             : "No bank details on file."}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Bank changes require step-up verification and adviser approval. Contact your adviser directly, or{" "}
-          <Link to="/requests" className="font-semibold text-primary underline">
-            request a consultation
-          </Link>
-          .
-        </p>
-      </Card>
-    </div>
+      )}
+    </Card>
   );
 }
