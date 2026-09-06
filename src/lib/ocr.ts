@@ -3,6 +3,7 @@ export interface ExtractedField {
   value: string;
   confidence: number;
   critical?: boolean;
+  note?: string;
 }
 
 export interface OcrResult {
@@ -13,22 +14,47 @@ export interface OcrResult {
 
 const CRITICAL = ["ID number", "Licence number", "Policy number", "Registration number"];
 
+// Digits that scanners/OCR commonly confuse with each other on low-quality
+// scans or photos — this is the "1 misread as a 7" risk the compliance
+// pipeline exists to catch. Used to inject a realistic misread into the
+// simulated OCR path so critical-field review is actually exercised.
+const DIGIT_CONFUSIONS: Record<string, string> = { "1": "7", "7": "1", "0": "8", "8": "0", "5": "6", "6": "5" };
+
+function maybeMisread(value: string, chance: number): { value: string; misread: boolean } {
+  if (!value || Math.random() > chance) return { value, misread: false };
+  const digitIndexes = [...value].map((c, i) => (/\d/.test(c) ? i : -1)).filter((i) => i >= 0);
+  if (digitIndexes.length === 0) return { value, misread: false };
+  const idx = digitIndexes[Math.floor(Math.random() * digitIndexes.length)]!;
+  const swapped = DIGIT_CONFUSIONS[value[idx]!];
+  if (!swapped) return { value, misread: false };
+  return { value: value.slice(0, idx) + swapped + value.slice(idx + 1), misread: true };
+}
+
 function fieldsFromText(text: string, baseConfidence: number): ExtractedField[] {
   const fields: ExtractedField[] = [];
-  const push = (labelText: string, value: string, delta = 0) => {
+  const push = (labelText: string, value: string, delta = 0, note?: string) => {
     if (!value) return;
     fields.push({
       label: labelText,
       value,
       confidence: Math.max(35, Math.min(99, Math.round(baseConfidence + delta))),
       critical: CRITICAL.includes(labelText),
+      ...(note ? { note } : {}),
     });
   };
 
-  const id = text.match(/\b\d{13}\b/)?.[0] ?? "";
-  push("ID number", id, -8);
-  const licence = text.match(/\b[A-Z]{2}\s?\d{3}\s?\d{3}\b/)?.[0] ?? "";
-  push("Licence number", licence, -12);
+  const rawId = text.match(/\b\d{13}\b/)?.[0] ?? "";
+  const id = maybeMisread(rawId, 0.5);
+  push(
+    "ID number", id.value, id.misread ? -30 : -8,
+    id.misread ? "Low confidence on this ID number — a digit may have been misread (e.g. 1/7, 0/8). Verify against the original document before confirming." : undefined,
+  );
+  const rawLicence = text.match(/\b[A-Z]{2}\s?\d{3}\s?\d{3}\b/)?.[0] ?? "";
+  const licence = maybeMisread(rawLicence, 0.35);
+  push(
+    "Licence number", licence.value, licence.misread ? -28 : -12,
+    licence.misread ? "Low confidence — please check this licence number against the original document." : undefined,
+  );
   const reg = text.match(/\b[A-Z]{2}\s?\d{2,3}[\s-]?[A-Z]{2}\b/)?.[0] ?? "";
   push("Registration number", reg, -5);
   const expiry = text.match(/\b(20\d{2})[-/](\d{2})[-/](\d{2})\b/)?.[0] ?? "";

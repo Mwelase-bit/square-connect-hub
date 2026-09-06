@@ -601,17 +601,22 @@ function UploadSlot({
                   ? "bg-warning/15 text-warning"
                   : "bg-danger/15 text-danger";
             return (
-              <div key={f.label} className="flex flex-wrap items-center gap-2">
-                <span className="w-40 shrink-0 text-xs text-muted-foreground">{f.label}</span>
-                <input
-                  className={input + " flex-1"}
-                  value={f.value}
-                  disabled={slot.confirmed}
-                  onChange={(e) => onFieldChange(idx, e.target.value)}
-                />
-                <span className={"shrink-0 rounded-full px-2 py-1 text-xs font-semibold " + badge}>
-                  {f.confidence}% confidence
-                </span>
+              <div key={f.label}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="w-40 shrink-0 text-xs text-muted-foreground">{f.label}</span>
+                  <input
+                    className={input + " flex-1"}
+                    value={f.value}
+                    disabled={slot.confirmed}
+                    onChange={(e) => onFieldChange(idx, e.target.value)}
+                  />
+                  <span className={"shrink-0 rounded-full px-2 py-1 text-xs font-semibold " + badge}>
+                    {f.confidence}% confidence
+                  </span>
+                </div>
+                {f.note && !slot.confirmed && (
+                  <p className="mt-1 pl-[10.5rem] text-xs font-medium text-warning">⚠ {f.note}</p>
+                )}
               </div>
             );
           })}

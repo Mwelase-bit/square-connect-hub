@@ -7,17 +7,36 @@ import { btn, input } from "./AppShell";
 
 interface SpeechResultLike {
   0: { transcript: string };
+  isFinal: boolean;
 }
 interface SpeechEventLike {
-  results: { 0: SpeechResultLike };
+  resultIndex: number;
+  results: SpeechResultLike[];
+}
+interface SpeechErrorEventLike {
+  error: string;
 }
 interface SpeechRecognitionLike {
   lang: string;
+  continuous: boolean;
+  interimResults: boolean;
   start: () => void;
+  stop: () => void;
   onresult: ((event: SpeechEventLike) => void) | null;
+  onerror: ((event: SpeechErrorEventLike) => void) | null;
   onend: (() => void) | null;
 }
 type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+const SPEECH_ERROR_MESSAGES: Record<string, string> = {
+  "not-allowed": "I don't have microphone access. Please allow microphone permission for this site in your browser settings and try again.",
+  "service-not-allowed": "I don't have microphone access. Please allow microphone permission for this site in your browser settings and try again.",
+  "no-speech": "I didn't hear anything. Try again and speak once the mic button turns red.",
+  "audio-capture": "I can't find a microphone on this device.",
+  "language-not-supported": "Voice input isn't available in this language here — retrying in English.",
+  network: "Voice input needs an internet connection to work in this browser.",
+  aborted: "",
+};
 
 declare global {
   interface Window {
@@ -60,6 +79,7 @@ export function ChatAgent() {
   const [listening, setListening] = useState(false);
   const [voiceOut, setVoiceOut] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     if (open && messages.length === 0 && session) {
@@ -96,18 +116,42 @@ export function ChatAgent() {
     }
   };
 
-  const toggleVoice = () => {
+  const startRecognition = (bcp47: string, retryOnUnsupportedLang: boolean) => {
     const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!Ctor) {
       setMessages((m) => [...m, { from: "bot", text: "Voice input isn't supported in this browser." }]);
       return;
     }
     const recognition = new Ctor();
-    recognition.lang = bcp47For(lang);
-    recognition.onresult = (e) => setDraft(e.results[0][0].transcript);
+    recognition.lang = bcp47;
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.onresult = (e) => {
+      const last = e.results[e.results.length - 1];
+      if (last) setDraft(last[0].transcript);
+    };
+    recognition.onerror = (e) => {
+      if (e.error === "language-not-supported" && retryOnUnsupportedLang) {
+        setMessages((m) => [...m, { from: "bot", text: SPEECH_ERROR_MESSAGES[e.error]! }]);
+        startRecognition("en-ZA", false);
+        return;
+      }
+      const msg = SPEECH_ERROR_MESSAGES[e.error];
+      if (msg) setMessages((m) => [...m, { from: "bot", text: msg }]);
+    };
     recognition.onend = () => setListening(false);
+    recognitionRef.current = recognition;
     recognition.start();
     setListening(true);
+  };
+
+  const toggleVoice = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    setDraft("");
+    startRecognition(bcp47For(lang), true);
   };
 
   return (
@@ -163,9 +207,9 @@ export function ChatAgent() {
             <button
               type="button"
               onClick={toggleVoice}
-              className={"shrink-0 rounded-md border border-border p-2 " + (listening ? "bg-danger/15 text-danger" : "hover:bg-muted")}
-              title="Voice input"
-              aria-label="Start voice input"
+              className={"shrink-0 rounded-md border border-border p-2 " + (listening ? "animate-pulse bg-danger/15 text-danger" : "hover:bg-muted")}
+              title={listening ? "Stop voice input" : "Voice input"}
+              aria-label={listening ? "Stop voice input" : "Start voice input"}
             >
               <Mic className="h-4 w-4" />
             </button>
@@ -176,7 +220,7 @@ export function ChatAgent() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") send(draft);
               }}
-              placeholder="Ask about claims, reminders…"
+              placeholder={listening ? "Listening…" : "Ask about claims, reminders…"}
             />
             <button onClick={() => send(draft)} className={btn + " shrink-0 px-3 py-2"} aria-label="Send message">
               <Send className="h-4 w-4" />
