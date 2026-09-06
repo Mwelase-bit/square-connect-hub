@@ -5,6 +5,7 @@ import { INSURERS, submitClaim } from "@/lib/claims";
 import { confidenceClass, runOcr, type ExtractedField } from "@/lib/ocr";
 import { buildPdf } from "@/lib/pdf";
 import { getDB, nextId, update, useSession } from "@/lib/store";
+import { rankTowProviders } from "@/lib/towing";
 import type { Claim, ClaimAttachment } from "@/lib/types";
 
 export const Route = createFileRoute("/claims/new")({
@@ -98,6 +99,7 @@ function NewClaimPage() {
 
   const db = getDB();
   const client = db.clients.find((c) => c.id === session.userId)!;
+  const towProviders = rankTowProviders(client.city);
 
   const goDetailsNext = () => {
     if (!incidentDate || !incidentTime || !incidentDescription.trim()) {
@@ -238,6 +240,42 @@ function NewClaimPage() {
           />
         </div>
       </div>
+
+      {step === 2 && (
+        <Card title="Need a tow? AI-suggested assistance">
+          <p className="text-sm text-muted-foreground">
+            Approved towing providers ranked by distance and availability. Selecting a provider does not book a tow
+            — you must call to confirm.
+          </p>
+          {towProviders.length === 0 ? (
+            <p className="mt-3 rounded-md bg-warning/15 p-3 text-sm font-medium text-warning">
+              No approved towing partner is on file for your area. This has been escalated — contact your adviser
+              directly, or use the assistant chat in the bottom-right corner.
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {towProviders.map((p) => (
+                <li key={p.name} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3">
+                  <div>
+                    <p className="text-sm font-bold">
+                      {p.name}{" "}
+                      <span className="ml-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold uppercase text-success">
+                        Approved
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      ~{p.distanceKm.toFixed(1)} km away · ETA {p.etaMinutes} min
+                    </p>
+                  </div>
+                  <a href={`tel:${p.phone}`} className={btn}>
+                    Call {p.phone}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
 
       {step === 2 && (
         <Card title="Claim details">
