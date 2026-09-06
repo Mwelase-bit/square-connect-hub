@@ -5,8 +5,10 @@ import type { RequestStatus, RequestType, ServiceRequest } from "./types";
 export interface RequestField {
   key: string;
   label: string;
-  type?: "text" | "textarea" | "date";
+  type?: "text" | "textarea" | "date" | "select";
   placeholder?: string;
+  options?: string[];
+  optional?: boolean;
 }
 
 export interface RequestTypeConfig {
@@ -18,7 +20,27 @@ export interface RequestTypeConfig {
   fields: RequestField[];
 }
 
+export const INSURANCE_TYPES = [
+  "Life Insurance",
+  "Health Insurance",
+  "Funeral Insurance",
+  "Personal Insurance",
+  "Commercial Insurance",
+  "Investment (goal-based)",
+];
+
 export const REQUEST_TYPES: RequestTypeConfig[] = [
+  {
+    key: "new_insurance",
+    label: "Request new insurance cover",
+    description: "Tell us what type of cover you're looking for and your adviser will follow up with options and a quote.",
+    highRisk: false,
+    autoComplete: false,
+    fields: [
+      { key: "insurance_type", label: "Type of insurance needed", type: "select", options: INSURANCE_TYPES },
+      { key: "notes", label: "Anything specific you're looking for? (optional)", type: "textarea", optional: true },
+    ],
+  },
   {
     key: "address_change",
     label: "Change of address",

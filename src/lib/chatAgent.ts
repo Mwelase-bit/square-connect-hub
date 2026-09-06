@@ -1,4 +1,6 @@
+import { rankCarHireProviders } from "./carHire";
 import { FORM_TYPES, reminderStatus } from "./store";
+import { rankTowProviders } from "./towing";
 import type { ClaimStatus, DB, Session } from "./types";
 
 export type ChatLang = "en" | "af" | "zu" | "xh";
@@ -122,6 +124,20 @@ const DOCUMENT_WORDS: Record<ChatLang, string[]> = {
   xh: ["uxwebhu", "tyikitya"],
 };
 
+const TOW_WORDS: Record<ChatLang, string[]> = {
+  en: ["tow", "towing", "tow truck", "breakdown", "stuck", "stranded", "roadside", "flatbed"],
+  af: ["sleep", "sleepdiens", "vasgeval", "vasval"],
+  zu: ["hudula", "donsa imoto", "ngihlala endleleni"],
+  xh: ["rhuqa", "tsala imoto", "ndixakekile endleleni"],
+};
+
+const HIRE_CAR_WORDS: Record<ChatLang, string[]> = {
+  en: ["hire car", "rental car", "rent a car", "car rental", "loan car", "courtesy car", "replacement car", "temporary car"],
+  af: ["huurmotor", "huurkar"],
+  zu: ["imoto yokuqasha", "iqashwe imoto"],
+  xh: ["imoto yokuqesha", "iqeshiwe imoto"],
+};
+
 const HELP_WORDS: Record<ChatLang, string[]> = {
   en: ["help", "what can you do", "options", "menu", "assist"],
   af: ["help", "wat kan jy doen"],
@@ -178,6 +194,10 @@ interface Phrases {
   adviserInfo: (name: string, phone: string, email: string) => string;
   noAdviser: string;
   documentsInfo: (signed: number, total: number) => string;
+  towList: (list: string) => string;
+  noTow: string;
+  hireCarList: (list: string) => string;
+  noHireCar: string;
   help: string;
   fallback: string;
 }
@@ -200,8 +220,12 @@ const PHRASES: Record<ChatLang, Phrases> = {
     adviserInfo: (name, phone, email) => `Your adviser is ${name}. Reach them on ${phone} or ${email}.`,
     noAdviser: "You don't have an adviser assigned yet.",
     documentsInfo: (signed, total) => `You've signed ${signed} of ${total} onboarding documents.`,
-    help: "I can help with: claim status, reminders, goals, your policies and net worth, your adviser's contact details, signed documents, and service requests like address or bank changes. Just ask!",
-    fallback: "I'm not sure about that yet. I can help with claims status, reminders, goals, policies, your adviser and service requests — or escalate this to your adviser.",
+    towList: (list) => `Here are approved towing providers near you: ${list}. Selecting one doesn't book it — please call to arrange.`,
+    noTow: "I don't have an approved towing partner on file for your area yet — I've flagged this for your adviser.",
+    hireCarList: (list) => `Here are approved car hire providers you can use while your vehicle is repaired: ${list}. Call to arrange collection.`,
+    noHireCar: "I don't have an approved car hire partner on file for your area yet — I've flagged this for your adviser.",
+    help: "I can help with: claim status, reminders, goals, your policies and net worth, your adviser's contact details, signed documents, towing and hire car assistance, and service requests like address or bank changes. Just ask!",
+    fallback: "I'm not sure about that yet. I can help with claims status, reminders, goals, policies, your adviser, towing, hire cars and service requests — or escalate this to your adviser.",
   },
   af: {
     greeting: (n) => `Hallo ${n}! Ek kan help met eise, herinneringe, doelwitte, polisse, jou adviseur se besonderhede en versoeke. Wat het jy nodig?`,
@@ -220,7 +244,11 @@ const PHRASES: Record<ChatLang, Phrases> = {
     adviserInfo: (name, phone, email) => `Jou adviseur is ${name}. Kontak hulle by ${phone} of ${email}.`,
     noAdviser: "Jy het nog nie 'n adviseur toegewys nie.",
     documentsInfo: (signed, total) => `Jy het ${signed} van ${total} inskrywingsdokumente onderteken.`,
-    help: "Ek kan help met: eisstatus, herinneringe, doelwitte, jou polisse en netto waarde, jou adviseur se kontakbesonderhede, ondertekende dokumente, en versoeke soos adres- of bankveranderinge. Vra gerus!",
+    towList: (list) => `Hier is goedgekeurde sleepdienste naby jou: ${list}. Dit bespreek nie 'n sleep nie — skakel om te reël.`,
+    noTow: "Ek het nog geen goedgekeurde sleepdiens vir jou area nie — ek het dit na jou adviseur aangedui.",
+    hireCarList: (list) => `Hier is goedgekeurde huurmotor-verskaffers wat jy kan gebruik terwyl jou voertuig herstel word: ${list}. Skakel om af te haal.`,
+    noHireCar: "Ek het nog geen goedgekeurde huurmotor-verskaffer vir jou area nie — ek het dit na jou adviseur aangedui.",
+    help: "Ek kan help met: eisstatus, herinneringe, doelwitte, jou polisse en netto waarde, jou adviseur se kontakbesonderhede, ondertekende dokumente, sleep- en huurmotorhulp, en versoeke soos adres- of bankveranderinge. Vra gerus!",
     fallback: "Ek is nog nie seker daarvan nie. Ek kan help met eisstatus, herinneringe, doelwitte, polisse, jou adviseur en versoeke — of dit na jou adviseur eskaleer.",
   },
   zu: {
@@ -240,7 +268,11 @@ const PHRASES: Record<ChatLang, Phrases> = {
     adviserInfo: (name, phone, email) => `Umeluleki wakho ngu-${name}. Mthinte ku-${phone} noma ku-${email}.`,
     noAdviser: "Awukabelwa umeluleki okwamanje.",
     documentsInfo: (signed, total) => `Usayine amadokhumenti ${signed} kwangu-${total} okubhaliswa.`,
-    help: "Ngingakusiza nge: isimo sesimangalo, izikhumbuzo, izinhloso, amaphalisi wakho nenani lemali, imininingwane yokuxhumana nomeluleki wakho, amadokhumenti asayiniwe, kanye nezicelo ezifana nokushintsha ikheli noma ibhange. Ake ubuze!",
+    towList: (list) => `Nazi izinkampani zokuhudula ezigunyaziwe eziseduze nawe: ${list}. Ukukhetha akushayi lokho — sicela ushayele ukuze uhlele.`,
+    noTow: "Angikabi nayo inkampani yokuhudula egunyaziwe endaweni yakho — sengikuphakamisele kumeluleki wakho.",
+    hireCarList: (list) => `Nazi izinkampani zokuqasha imoto ezigunyaziwe ongazisebenzisa ngenkathi imoto yakho ilungiswa: ${list}. Shayela ukuze uhlele ukuyilanda.`,
+    noHireCar: "Angikabi nayo inkampani yokuqasha imoto egunyaziwe endaweni yakho — sengikuphakamisele kumeluleki wakho.",
+    help: "Ngingakusiza nge: isimo sesimangalo, izikhumbuzo, izinhloso, amaphalisi wakho nenani lemali, imininingwane yokuxhumana nomeluleki wakho, amadokhumenti asayiniwe, usizo lokuhudula nokuqasha imoto, kanye nezicelo ezifana nokushintsha ikheli noma ibhange. Ake ubuze!",
     fallback: "Angikaqiniseki ngalokho okwamanje. Ngingakusiza ngesimo sezimangalo, izikhumbuzo, izinhloso, amaphalisi, umeluleki wakho nezicelo — noma ngikuphakamisele kumeluleki wakho.",
   },
   xh: {
@@ -260,7 +292,11 @@ const PHRASES: Record<ChatLang, Phrases> = {
     adviserInfo: (name, phone, email) => `Umcebisi wakho ngu-${name}. Qhagamshelana naye ku-${phone} okanye ku-${email}.`,
     noAdviser: "Awukabelwa umcebisi okwangoku.",
     documentsInfo: (signed, total) => `Utyikitye uxwebhu ${signed} kwe-${total} ekubhaliseni.`,
-    help: "Ndingakunceda nge: ubume bebango, izikhumbuzo, iinjongo, amaphalisi wakho nexabiso lakho, iinkcukacha zonxibelelwano nomcebisi wakho, uxwebhu olutyikitiweyo, kunye nezicelo ezinjengotshintsho lwedilesi okanye ibhanki. Khawubuze!",
+    towList: (list) => `Nazi iinkampani zokurhuqa ezigunyazisiweyo ezikufuphi nawe: ${list}. Ukukhetha akuthengi lonto — nceda ufowunele ukulungiselela.`,
+    noTow: "Andikabi nenkampani yokurhuqa egunyazisiweyo kwindawo yakho — ndikuphakamisele kumcebisi wakho.",
+    hireCarList: (list) => `Nazi iinkampani zokuqesha imoto ezigunyazisiweyo onokuzisebenzisa ngeli xesha imoto yakho ilungiswayo: ${list}. Fowunela ukulungiselela ukuyilanda.`,
+    noHireCar: "Andikabi nenkampani yokuqesha imoto egunyazisiweyo kwindawo yakho — ndikuphakamisele kumcebisi wakho.",
+    help: "Ndingakunceda nge: ubume bebango, izikhumbuzo, iinjongo, amaphalisi wakho nexabiso lakho, iinkcukacha zonxibelelwano nomcebisi wakho, uxwebhu olutyikitiweyo, uncedo lokurhuqa nokuqesha imoto, kunye nezicelo ezinjengotshintsho lwedilesi okanye ibhanki. Khawubuze!",
     fallback: "Andikaqiniseki ngoko okwangoku. Ndingakunceda ngobume bebango, izikhumbuzo, iinjongo, amaphalisi, umcebisi wakho nezicelo — okanye ndikudlulisele kumcebisi wakho.",
   },
 };
@@ -287,6 +323,8 @@ export function respond(message: string, ctx: ChatContext): ChatReply {
       { key: "policy", score: intentScore(tokens, q, lang, POLICY_WORDS) },
       { key: "adviser", score: intentScore(tokens, q, lang, ADVISER_WORDS) },
       { key: "document", score: intentScore(tokens, q, lang, DOCUMENT_WORDS) },
+      { key: "tow", score: intentScore(tokens, q, lang, TOW_WORDS) },
+      { key: "hireCar", score: intentScore(tokens, q, lang, HIRE_CAR_WORDS) },
       { key: "request", score: intentScore(tokens, q, lang, REQUEST_WORDS) },
       { key: "help", score: intentScore(tokens, q, lang, HELP_WORDS) },
     ] as const;
@@ -338,6 +376,18 @@ export function respond(message: string, ctx: ChatContext): ChatReply {
         case "document": {
           const signed = db.forms.filter((f) => f.client_id === session.userId && f.signed).length;
           return { text: t.documentsInfo(signed, FORM_TYPES.length), escalate: false };
+        }
+        case "tow": {
+          const client = db.clients.find((c) => c.id === session.userId);
+          const providers = rankTowProviders(client?.city ?? "");
+          if (providers.length === 0) return { text: t.noTow, escalate: false };
+          return { text: t.towList(providers.map((p) => `${p.name} (${p.phone})`).join("; ")), escalate: false };
+        }
+        case "hireCar": {
+          const client = db.clients.find((c) => c.id === session.userId);
+          const providers = rankCarHireProviders(client?.city ?? "");
+          if (providers.length === 0) return { text: t.noHireCar, escalate: false };
+          return { text: t.hireCarList(providers.map((p) => `${p.name} (${p.phone})`).join("; ")), escalate: false };
         }
         case "request":
           return { text: t.requestsInfo, escalate: false };

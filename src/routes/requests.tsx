@@ -171,7 +171,14 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
   const session = useSession()!;
   const client = db.clients.find((c) => c.id === session.userId)!;
   const [type, setType] = useState<RequestType>(SELECTABLE_REQUEST_TYPES[0]!.key);
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    const cfg = requestTypeConfig(SELECTABLE_REQUEST_TYPES[0]!.key);
+    const defaults: Record<string, string> = {};
+    for (const f of cfg.fields) {
+      if (f.type === "select" && f.options && f.options.length > 0) defaults[f.key] = f.options[0]!;
+    }
+    return defaults;
+  });
   const [error, setError] = useState("");
 
   const [verifying, setVerifying] = useState(false);
@@ -182,7 +189,12 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
 
   const changeType = (t: RequestType) => {
     setType(t);
-    setValues({});
+    const cfg = requestTypeConfig(t);
+    const defaults: Record<string, string> = {};
+    for (const f of cfg.fields) {
+      if (f.type === "select" && f.options && f.options.length > 0) defaults[f.key] = f.options[0]!;
+    }
+    setValues(defaults);
     setError("");
     setVerifying(false);
     setEnteredCode("");
@@ -190,7 +202,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
 
   const setField = (key: string, v: string) => setValues((p) => ({ ...p, [key]: v }));
 
-  const missingFields = config.fields.filter((f) => !values[f.key]?.trim());
+  const missingFields = config.fields.filter((f) => !f.optional && !values[f.key]?.trim());
 
   const finalizeSubmit = (stepUpVerified: boolean) => {
     submitRequest({
@@ -262,6 +274,19 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
                   value={values[f.key] ?? ""}
                   onChange={(e) => setField(f.key, e.target.value)}
                 />
+              ) : f.type === "select" ? (
+                <select
+                  id={f.key}
+                  className={input}
+                  value={values[f.key] ?? f.options?.[0] ?? ""}
+                  onChange={(e) => setField(f.key, e.target.value)}
+                >
+                  {f.options?.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <input
                   id={f.key}

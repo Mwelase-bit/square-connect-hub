@@ -193,6 +193,7 @@ export interface IncidentAlert {
 }
 
 export type RequestType =
+  | "new_insurance"
   | "address_change"
   | "bank_details_change"
   | "policy_document"
