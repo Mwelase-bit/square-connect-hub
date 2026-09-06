@@ -1,7 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  SESSION_TIMEOUT_MS,
   audit,
   getSession,
   setSession,
@@ -10,12 +9,14 @@ import {
 } from "@/lib/store";
 import type { Role } from "@/lib/types";
 import { ApiLogPanel } from "./ApiLogPanel";
+import { ChatAgent } from "./ChatAgent";
 
 const clientNav = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/claims", label: "Claims" },
   { to: "/reminders", label: "Reminders" },
   { to: "/goals", label: "Goals" },
+  { to: "/requests", label: "Requests" },
   { to: "/onboarding", label: "Documents" },
   { to: "/profile", label: "Profile" },
 ] as const;
@@ -25,6 +26,7 @@ const staffNav = [
   { to: "/claims", label: "Claims" },
   { to: "/reminders", label: "Reminders" },
   { to: "/goals", label: "Goals" },
+  { to: "/requests", label: "Requests" },
   { to: "/audit", label: "Audit trail" },
   { to: "/profile", label: "Profile" },
 ] as const;
@@ -97,8 +99,8 @@ export function AppShell({
           </Link>
           <div className="ml-auto flex items-center gap-3">
             <div className="text-right leading-tight">
-              <p className="text-sm font-semibold">{session.name}</p>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">{session.role}</p>
+              <p className="text-sm font-bold">{session.name}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{session.role}</p>
             </div>
             <button
               onClick={() => {
@@ -106,7 +108,7 @@ export function AppShell({
                 setSession(null);
                 void navigate({ to: "/" });
               }}
-              className="rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted"
+              className="rounded-md border border-border px-3 py-2 text-sm font-semibold hover:bg-muted"
             >
               Log out
             </button>
@@ -116,8 +118,8 @@ export function AppShell({
               <Link
                 key={n.to}
                 to={n.to}
-                className="shrink-0 rounded-md px-3 py-2 font-medium text-muted-foreground hover:bg-muted"
-                activeProps={{ className: "shrink-0 rounded-md px-3 py-2 font-semibold bg-secondary text-secondary-foreground" }}
+                className="shrink-0 rounded-md px-3 py-2 font-semibold text-muted-foreground hover:bg-muted"
+                activeProps={{ className: "shrink-0 rounded-md px-3 py-2 font-bold bg-secondary text-secondary-foreground" }}
               >
                 {n.label}
               </Link>
@@ -126,11 +128,8 @@ export function AppShell({
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
-      <footer className="mx-auto max-w-6xl px-4 pb-10 text-xs text-muted-foreground">
-        Royal Square Financial (Pty) Ltd — demo environment. Sessions expire after{" "}
-        {SESSION_TIMEOUT_MS / 60000} minutes of inactivity.
-      </footer>
       <ApiLogPanel />
+      <ChatAgent />
     </div>
   );
 }
@@ -157,6 +156,17 @@ export function Card({
   );
 }
 
+export function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | undefined }) {
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={name} className="h-16 w-16 shrink-0 rounded-full object-cover" />;
+  }
+  return (
+    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-secondary text-xl font-bold text-secondary-foreground">
+      {name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+    </div>
+  );
+}
+
 export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="card-surface p-5">
@@ -168,9 +178,9 @@ export function Stat({ label, value, hint }: { label: string; value: string; hin
 }
 
 export const btn =
-  "inline-flex items-center justify-center rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-md bg-primary px-4 py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50";
 export const btnGhost =
-  "inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-3 text-sm font-semibold hover:bg-muted disabled:opacity-50";
+  "inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-3 text-sm font-bold hover:bg-muted disabled:opacity-50";
 export const input =
   "w-full rounded-md border border-input bg-card px-3 py-3 text-base outline-none focus:border-ring focus:ring-2 focus:ring-ring/30";
-export const label = "mb-1 block text-sm font-medium text-foreground";
+export const label = "mb-1 block text-sm font-semibold text-foreground";

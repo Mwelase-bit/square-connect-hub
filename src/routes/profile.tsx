@@ -1,7 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { Camera } from "lucide-react";
 import { useState } from "react";
-import { AppShell, Card, btn, input, label } from "@/components/AppShell";
+import { AppShell, Avatar, Card, btn, input, label } from "@/components/AppShell";
 import { audit, update, useDB, useSession } from "@/lib/store";
+
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -19,14 +29,36 @@ export const Route = createFileRoute("/profile")({
   ),
 });
 
-function Initials({ name }: { name: string }) {
+function AvatarUpload({
+  name,
+  avatarUrl,
+  onUpload,
+}: {
+  name: string;
+  avatarUrl?: string | undefined;
+  onUpload: (dataUrl: string) => void;
+}) {
+  const inputId = "avatar-" + name.replace(/\s+/g, "-").toLowerCase();
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-xl font-bold text-secondary-foreground">
-      {name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)}
+    <div className="relative h-16 w-16 shrink-0">
+      <Avatar name={name} avatarUrl={avatarUrl} />
+      <label
+        htmlFor={inputId}
+        className="absolute -bottom-1 -right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground"
+        title="Change profile photo"
+      >
+        <Camera className="h-3.5 w-3.5" />
+        <input
+          id={inputId}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void readAsDataUrl(f).then(onUpload);
+          }}
+        />
+      </label>
     </div>
   );
 }
@@ -47,7 +79,21 @@ function ProfilePage() {
       <h1 className="text-2xl font-bold">Profile</h1>
       <Card>
         <div className="flex items-center gap-4">
-          <Initials name={session.name} />
+          {adviser ? (
+            <AvatarUpload
+              name={session.name}
+              avatarUrl={adviser.avatar_base64}
+              onUpload={(dataUrl) => {
+                update((db) => {
+                  const a = db.advisers.find((x) => x.id === adviser.id);
+                  if (a) a.avatar_base64 = dataUrl;
+                });
+                audit("data_viewed", "adviser", { action: "avatar_updated" });
+              }}
+            />
+          ) : (
+            <Avatar name={session.name} />
+          )}
           <div>
             <p className="text-lg font-semibold">{session.name}</p>
             <p className="text-sm capitalize text-muted-foreground">{session.role}</p>
@@ -79,9 +125,6 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
     name: client.name,
     email: client.email,
     phone: client.phone,
-    address: client.address,
-    city: client.city,
-    postal_code: client.postal_code,
   });
 
   const set = (k: keyof typeof values, v: string) => setValues((p) => ({ ...p, [k]: v }));
@@ -93,9 +136,6 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
       c.name = values.name.trim();
       c.email = values.email.trim();
       c.phone = values.phone.trim();
-      c.address = values.address.trim();
-      c.city = values.city.trim();
-      c.postal_code = values.postal_code.trim();
       c.last_interaction = new Date().toISOString();
     });
     audit("data_viewed", "client", { action: "profile_updated" });
@@ -108,7 +148,17 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Initials name={client.name} />
+            <AvatarUpload
+              name={client.name}
+              avatarUrl={client.avatar_base64}
+              onUpload={(dataUrl) => {
+                update((db) => {
+                  const c = db.clients.find((x) => x.id === client.id);
+                  if (c) c.avatar_base64 = dataUrl;
+                });
+                audit("data_viewed", "client", { action: "avatar_updated" });
+              }}
+            />
             <div>
               <p className="text-lg font-semibold">{client.name}</p>
               <p className="text-sm text-muted-foreground">
@@ -158,39 +208,6 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
                 onChange={(e) => set("phone", e.target.value)}
               />
             </div>
-            <div>
-              <label className={label} htmlFor="p_address">
-                Street address
-              </label>
-              <input
-                id="p_address"
-                className={input}
-                value={values.address}
-                onChange={(e) => set("address", e.target.value)}
-              />
-            </div>
-            <div>
-              <label className={label} htmlFor="p_city">
-                City
-              </label>
-              <input
-                id="p_city"
-                className={input}
-                value={values.city}
-                onChange={(e) => set("city", e.target.value)}
-              />
-            </div>
-            <div>
-              <label className={label} htmlFor="p_postal">
-                Postal code
-              </label>
-              <input
-                id="p_postal"
-                className={input}
-                value={values.postal_code}
-                onChange={(e) => set("postal_code", e.target.value)}
-              />
-            </div>
             <div className="flex gap-3 md:col-span-2">
               <button className={btn} onClick={save}>
                 Save changes
@@ -212,20 +229,38 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
               <span className="text-muted-foreground">Phone:</span> {client.phone}
             </p>
             <p>
-              <span className="text-muted-foreground">Address:</span> {client.address || "—"}
-            </p>
-            <p>
-              <span className="text-muted-foreground">City:</span> {client.city || "—"}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Postal code:</span>{" "}
-              {client.postal_code || "—"}
-            </p>
-            <p>
               <span className="text-muted-foreground">ID number:</span> {client.id_number || "—"}
             </p>
           </div>
         )}
+      </Card>
+
+      <Card title="Address">
+        <p className="text-sm font-medium">
+          {client.address ? `${client.address}, ${client.city} ${client.postal_code}` : "No address on file."}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Address changes require adviser verification.{" "}
+          <Link to="/requests" className="font-semibold text-primary underline">
+            Submit a change of address request
+          </Link>
+          .
+        </p>
+      </Card>
+
+      <Card title="Bank details">
+        <p className="text-sm font-medium">
+          {client.bank_name
+            ? `${client.bank_name} · account ${client.bank_account_number} · branch ${client.bank_branch_code}`
+            : "No bank details on file."}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Bank changes require step-up verification and adviser approval.{" "}
+          <Link to="/requests" className="font-semibold text-primary underline">
+            Submit a change of bank details request
+          </Link>
+          .
+        </p>
       </Card>
     </div>
   );

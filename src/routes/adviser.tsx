@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, Card, Stat } from "@/components/AppShell";
+import { acknowledgeIncident, resolveIncident } from "@/lib/incidents";
 import { formatZAR, netWorth, reminderStatus, useDB, useSession } from "@/lib/store";
 
 export const Route = createFileRoute("/adviser")({
@@ -26,6 +27,9 @@ function AdviserDashboard() {
 
   const clients = db.clients.filter((c) => session.role === "admin" || c.adviser_id === session.userId);
   const clientIds = clients.map((c) => c.id);
+  const activeIncidents = db.incidents
+    .filter((i) => clientIds.includes(i.client_id) && i.status !== "resolved")
+    .sort((a, b) => b.activated_at.localeCompare(a.activated_at));
   const reminders = db.reminders
     .filter((r) => clientIds.includes(r.client_id) && r.audience !== "client" && !r.dismissed)
     .sort((a, b) => a.due_date.localeCompare(b.due_date));
@@ -40,6 +44,48 @@ function AdviserDashboard() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Adviser dashboard</h1>
+
+      {activeIncidents.length > 0 && (
+        <div className="space-y-3 rounded-md border-2 border-danger bg-danger/10 p-4">
+          <p className="text-sm font-extrabold uppercase tracking-wide text-danger">
+            ⚠ {activeIncidents.length} active incident alert{activeIncidents.length > 1 ? "s" : ""}
+          </p>
+          {activeIncidents.map((inc) => {
+            const client = db.clients.find((c) => c.id === inc.client_id);
+            return (
+              <div key={inc.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-card p-3">
+                <div>
+                  <p className="text-sm font-bold">{client?.name ?? "Unknown client"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Activated {new Date(inc.activated_at).toLocaleString("en-ZA")} · Status: {inc.status}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {client?.phone && (
+                    <a href={`tel:${client.phone}`} className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">
+                      Call client
+                    </a>
+                  )}
+                  {inc.status === "active" && (
+                    <button
+                      className="rounded-md border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                      onClick={() => acknowledgeIncident(inc.id)}
+                    >
+                      Acknowledge
+                    </button>
+                  )}
+                  <button
+                    className="rounded-md border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
+                    onClick={() => resolveIncident(inc.id)}
+                  >
+                    Resolve
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Active clients" value={String(clients.length)} />

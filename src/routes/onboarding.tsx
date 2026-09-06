@@ -114,7 +114,7 @@ function FormDialog({ type, onClose }: { type: FormType; onClose: () => void }) 
     city: client.city,
     postal_code: client.postal_code,
     id_number: client.id_number,
-    adviser: db.advisers.find((a) => a.id === client.adviser_id)?.name ?? "Qiniso Ntuli",
+    adviser: db.advisers.find((a) => a.id === client.adviser_id)?.name ?? "Awande Mthembu",
     comms_preference: "Email",
   });
   const [popia, setPopia] = useState(false);

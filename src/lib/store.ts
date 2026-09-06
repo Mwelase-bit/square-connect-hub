@@ -30,27 +30,30 @@ function seed(): DB {
   const id = () => ++seq;
 
   const advisers = [
-    { id: 1, name: "Qiniso Ntuli", email: "qiniso@royalsquare.co.za", phone: "+27 82 555 0111" },
+    { id: 1, name: "Awande Mthembu", email: "awande@royalsquare.co.za", phone: "+27 82 555 0111" },
     { id: 2, name: "Lerato Mokoena", email: "lerato@royalsquare.co.za", phone: "+27 82 555 0122" },
   ];
 
   const clients = [
     {
-      id: 1, email: "john@email.com", phone: "+27 83 111 2222", name: "John Smith",
+      id: 1, email: "musa@email.com", phone: "+27 83 111 2222", name: "Musa",
       address: "12 Oak Avenue, Sandton", city: "Johannesburg", postal_code: "2196",
-      id_number: "8501015800083", adviser_id: 1, profile_complete: true,
+      id_number: "8501015800083", bank_name: "Standard Bank", bank_account_number: "10023344551", bank_branch_code: "051001",
+      adviser_id: 1, profile_complete: true,
       date_joined: iso(-320), last_interaction: iso(-3),
     },
     {
       id: 2, email: "jane@email.com", phone: "+27 84 333 4444", name: "Jane Doe",
       address: "8 Protea Road, Rondebosch", city: "Cape Town", postal_code: "7700",
-      id_number: "9003125900085", adviser_id: 1, profile_complete: true,
+      id_number: "9003125900085", bank_name: "FNB", bank_account_number: "62334455661", bank_branch_code: "250655",
+      adviser_id: 1, profile_complete: true,
       date_joined: iso(-210), last_interaction: iso(-11),
     },
     {
       id: 3, email: "bob@email.com", phone: "+27 82 777 8888", name: "Bob Johnson",
       address: "45 Umhlanga Rocks Drive", city: "Durban", postal_code: "4051",
-      id_number: "7811205700081", adviser_id: 2, profile_complete: true,
+      id_number: "7811205700081", bank_name: "Nedbank", bank_account_number: "1123344556", bank_branch_code: "198765",
+      adviser_id: 2, profile_complete: true,
       date_joined: iso(-95), last_interaction: iso(-1),
     },
   ];
@@ -107,10 +110,10 @@ function seed(): DB {
       incident_description: "Rear-ended at a traffic light on William Nicol Drive.",
       police_notified: true, police_case_number: "CAS 224/08/2026",
       witness_name: "Thabo Dlamini", witness_phone: "+27 71 222 3333", witness_statement: true,
-      driver: "John Smith", usage: "personal",
+      driver: "Musa", usage: "personal",
       third_party_name: "Sipho Khumalo", third_party_id: "8207145600082", third_party_licence: "CA 421 902",
       third_party_registration: "ND 55 GP", third_party_insurer: "Discovery", third_party_policy: "DIS-889231",
-      signed: true, signed_at: iso(-15), signed_by: "John Smith", pdf_base64: null, ratings: [],
+      signed: true, signed_at: iso(-15), signed_by: "Musa", pdf_base64: null, ratings: [],
       created_at: iso(-15), updated_at: iso(-2),
     },
     {
@@ -143,6 +146,41 @@ function seed(): DB {
     },
   ];
 
+  const requests = [
+    {
+      id: id(), client_id: 1, adviser_id: 1, request_type: "consultation_request" as const,
+      status: "completed" as const, high_risk: false, step_up_verified: false,
+      details: { preferred_date: dateOnly(-10), topic: "Review my investment portfolio ahead of the new tax year." },
+      adviser_note: "Covered during the annual review call.",
+      document_base64: null,
+      created_at: iso(-14), updated_at: iso(-10),
+    },
+    {
+      id: id(), client_id: 1, adviser_id: 1, request_type: "address_change" as const,
+      status: "pending" as const, high_risk: true, step_up_verified: true,
+      details: { address: "22 Baker Street", city: "Johannesburg", postal_code: "2196" },
+      adviser_note: "",
+      document_base64: null,
+      created_at: iso(-2), updated_at: iso(-2),
+    },
+    {
+      id: id(), client_id: 2, adviser_id: 1, request_type: "bank_details_change" as const,
+      status: "rejected" as const, high_risk: true, step_up_verified: true,
+      details: { bank_name: "Capitec", bank_account_number: "1044223390", bank_branch_code: "470010" },
+      adviser_note: "Please resubmit with a certified bank confirmation letter.",
+      document_base64: null,
+      created_at: iso(-6), updated_at: iso(-5),
+    },
+    {
+      id: id(), client_id: 3, adviser_id: 2, request_type: "irp5_request" as const,
+      status: "completed" as const, high_risk: false, step_up_verified: false,
+      details: { tax_year: "2025/2026" },
+      adviser_note: "",
+      document_base64: null,
+      created_at: iso(-20), updated_at: iso(-19),
+    },
+  ];
+
   const statusUpdates = [
     { id: id(), claim_id: claims[0]!.id, status: "submitted" as ClaimStatus, message: "Claim submitted and digitally signed.", timestamp: iso(-15) },
     { id: id(), claim_id: claims[0]!.id, status: "processing" as ClaimStatus, message: "Claim number RSF-CLM-20260821-001 assigned.", timestamp: iso(-15) },
@@ -157,9 +195,15 @@ function seed(): DB {
   return {
     advisers, clients, policies, forms, reminders, goals, claims,
     attachments: [], statusUpdates,
+    requests,
+    incidents: [],
     audit: [
       { id: id(), user_id: 1, user_type: "adviser", action: "login", resource: "session", timestamp: iso(-1), details: {} },
       { id: id(), user_id: 1, user_type: "client", action: "claim_submitted", resource: "claim", timestamp: iso(-15), details: { claim: "RSF-CLM-20260821-001" } },
+      { id: id(), user_id: 1, user_type: "client", action: "request_submitted", resource: "service_request", timestamp: iso(-14), details: { type: "consultation_request" } },
+      { id: id(), user_id: 1, user_type: "adviser", action: "request_decided", resource: "service_request", timestamp: iso(-10), details: { status: "completed" } },
+      { id: id(), user_id: 2, user_type: "client", action: "request_submitted", resource: "service_request", timestamp: iso(-6), details: { type: "bank_details_change" } },
+      { id: id(), user_id: 1, user_type: "adviser", action: "request_decided", resource: "service_request", timestamp: iso(-5), details: { status: "rejected" } },
     ],
     apiLog: [],
     seq,
@@ -170,12 +214,23 @@ let memory: DB | null = null;
 const listeners = new Set<() => void>();
 let snapshotVersion = 0;
 
+function migrate(db: DB): DB {
+  if (!db.requests) db.requests = [];
+  if (!db.incidents) db.incidents = [];
+  for (const c of db.clients) {
+    if (c.bank_name === undefined) c.bank_name = "";
+    if (c.bank_account_number === undefined) c.bank_account_number = "";
+    if (c.bank_branch_code === undefined) c.bank_branch_code = "";
+  }
+  return db;
+}
+
 function load(): DB {
   if (memory) return memory;
   if (typeof window === "undefined") return (memory = seed());
   try {
     const raw = window.localStorage.getItem(DB_KEY);
-    memory = raw ? (JSON.parse(raw) as DB) : seed();
+    memory = raw ? migrate(JSON.parse(raw) as DB) : seed();
   } catch {
     memory = seed();
   }
@@ -269,14 +324,17 @@ export function logApiCall(method: string, url: string, request: unknown, respon
 const sessionListeners = new Set<() => void>();
 let sessionVersion = 0;
 
+// Session lives in sessionStorage (not localStorage) so each browser tab can be
+// signed in as a different user — e.g. a client tab and an adviser tab side by
+// side — while the shared DB below still syncs live between them.
 export function getSession(): Session | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(SESSION_KEY);
+    const raw = window.sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as Session;
     if (Date.now() - s.lastActivity > SESSION_TIMEOUT_MS) {
-      window.localStorage.removeItem(SESSION_KEY);
+      window.sessionStorage.removeItem(SESSION_KEY);
       return null;
     }
     return s;
@@ -287,8 +345,8 @@ export function getSession(): Session | null {
 
 export function setSession(s: Session | null) {
   if (typeof window === "undefined") return;
-  if (s) window.localStorage.setItem(SESSION_KEY, JSON.stringify(s));
-  else window.localStorage.removeItem(SESSION_KEY);
+  if (s) window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  else window.sessionStorage.removeItem(SESSION_KEY);
   sessionVersion++;
   sessionListeners.forEach((l) => l());
 }
@@ -298,8 +356,21 @@ export function touchSession() {
   if (s) {
     s.lastActivity = Date.now();
     if (typeof window !== "undefined")
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
   }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === DB_KEY) {
+      try {
+        memory = e.newValue ? migrate(JSON.parse(e.newValue) as DB) : seed();
+      } catch {
+        memory = seed();
+      }
+      emit();
+    }
+  });
 }
 
 export function useSession(): Session | null {

@@ -5,6 +5,7 @@ export interface Adviser {
   name: string;
   email: string;
   phone: string;
+  avatar_base64?: string;
 }
 
 export interface Policy {
@@ -26,10 +27,14 @@ export interface Client {
   city: string;
   postal_code: string;
   id_number: string;
+  bank_name: string;
+  bank_account_number: string;
+  bank_branch_code: string;
   adviser_id: number;
   profile_complete: boolean;
   date_joined: string;
   last_interaction: string;
+  avatar_base64?: string;
 }
 
 export type FormType =
@@ -170,6 +175,44 @@ export interface ApiLogEntry {
   timestamp: string;
 }
 
+export type IncidentStatus = "active" | "acknowledged" | "resolved";
+
+export interface IncidentAlert {
+  id: number;
+  client_id: number;
+  adviser_id: number;
+  status: IncidentStatus;
+  activated_at: string;
+  acknowledged_at: string | null;
+  resolved_at: string | null;
+}
+
+export type RequestType =
+  | "address_change"
+  | "bank_details_change"
+  | "policy_document"
+  | "border_letter"
+  | "irp5_request"
+  | "consultation_request"
+  | "financial_info";
+
+export type RequestStatus = "pending" | "approved" | "rejected" | "completed";
+
+export interface ServiceRequest {
+  id: number;
+  client_id: number;
+  adviser_id: number;
+  request_type: RequestType;
+  status: RequestStatus;
+  high_risk: boolean;
+  step_up_verified: boolean;
+  details: Record<string, string>;
+  adviser_note: string;
+  document_base64: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DB {
   advisers: Adviser[];
   clients: Client[];
@@ -180,6 +223,8 @@ export interface DB {
   claims: Claim[];
   attachments: ClaimAttachment[];
   statusUpdates: ClaimStatusUpdate[];
+  requests: ServiceRequest[];
+  incidents: IncidentAlert[];
   audit: AuditEntry[];
   apiLog: ApiLogEntry[];
   seq: number;

@@ -1,5 +1,7 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { AppShell, Card, Stat, btn, btnGhost } from "@/components/AppShell";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { AppShell, Avatar, Card, Stat, btn, btnGhost } from "@/components/AppShell";
+import { PANIC_HOLD_SECONDS, activateIncident } from "@/lib/incidents";
 import { FORM_TYPES, formatZAR, netWorth, reminderStatus, useDB, useSession } from "@/lib/store";
 
 export const Route = createFileRoute("/dashboard")({
@@ -38,9 +40,7 @@ function ClientDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-xl font-bold text-secondary-foreground">
-          {client.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-        </div>
+        <Avatar name={client.name} avatarUrl={client.avatar_base64} />
         <div>
           <h1 className="text-2xl font-bold">{client.name}</h1>
           <p className="text-sm text-muted-foreground">{client.email} · {client.phone}</p>
@@ -63,6 +63,8 @@ function ClientDashboard() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          <PanicButton clientId={client.id} adviserId={client.adviser_id} />
+
           <Card title="Quick actions">
             <div className="flex flex-wrap gap-3">
               <Link to="/claims/checklist" className={btn}>Report an Accident or Loss</Link>
@@ -162,6 +164,79 @@ function ClientDashboard() {
             <Link to="/onboarding" className={btnGhost + " mt-3"}>Download my documents</Link>
           </Card>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PanicButton({ clientId, adviserId }: { clientId: number; adviserId: number }) {
+  const navigate = useNavigate();
+  const [holding, setHolding] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startRef = useRef(0);
+
+  const stop = () => {
+    setHolding(false);
+    setProgress(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+  };
+
+  const start = () => {
+    setHolding(true);
+    startRef.current = Date.now();
+    timerRef.current = setInterval(() => {
+      const elapsed = (Date.now() - startRef.current) / 1000;
+      const pct = Math.min(1, elapsed / PANIC_HOLD_SECONDS);
+      setProgress(pct);
+      if (pct >= 1) {
+        stop();
+        activateIncident(clientId, adviserId);
+        void navigate({ to: "/claims/checklist" });
+      }
+    }, 50);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const radius = 28;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-md border border-danger/40 bg-danger/5 p-4">
+      <button
+        type="button"
+        onPointerDown={start}
+        onPointerUp={stop}
+        onPointerLeave={stop}
+        className="relative flex h-16 w-16 shrink-0 select-none items-center justify-center rounded-full bg-danger text-xs font-extrabold text-white"
+      >
+        <svg className="absolute inset-0 h-16 w-16 -rotate-90" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r={radius} fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="4" />
+          <circle
+            cx="32"
+            cy="32"
+            r={radius}
+            fill="none"
+            stroke="white"
+            strokeWidth="4"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - progress)}
+          />
+        </svg>
+        {holding ? `${Math.ceil(PANIC_HOLD_SECONDS * (1 - progress))}s` : "SOS"}
+      </button>
+      <div>
+        <p className="text-sm font-bold text-danger">Emergency? Press and hold for help</p>
+        <p className="text-xs font-medium text-muted-foreground">
+          Hold for {PANIC_HOLD_SECONDS} seconds to alert your adviser immediately and start an accident report. This
+          notifies Royal Square — it is not an emergency services line.
+        </p>
       </div>
     </div>
   );

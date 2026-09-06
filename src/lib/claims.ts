@@ -65,12 +65,12 @@ export function submitClaim(claim: Claim) {
 
   // Simulated insurer workflow.
   const steps: [number, ClaimStatus, string][] = [
-    [1000, "processing", `Claim number ${number} assigned. Handler: Nomsa Zulu.`],
-    [3000, "assessment_scheduled", `Assessment scheduled for ${new Date(Date.now() + 4 * 86400000).toLocaleDateString("en-ZA")}.`],
-    [6000, "under_assessment", "Vehicle with assessor Pieter van Wyk (approved panel)."],
-    [9000, "quote_received", "Repair quote received: R15,000 (paint, parts and labour)."],
-    [12000, "repair_authorised", "Repair authorised by the insurer."],
-    [15000, "repair_in_progress", "Week 1 update: parts ordered, bodywork 60% complete."],
+    [400, "processing", `Claim number ${number} assigned. Handler: Nomsa Zulu.`],
+    [900, "assessment_scheduled", `Assessment scheduled for ${new Date(Date.now() + 4 * 86400000).toLocaleDateString("en-ZA")}.`],
+    [1400, "under_assessment", "Vehicle with assessor Pieter van Wyk (approved panel)."],
+    [1900, "quote_received", "Repair quote received: R15,000 (paint, parts and labour)."],
+    [2400, "repair_authorised", "Repair authorised by the insurer."],
+    [2900, "repair_in_progress", "Week 1 update: parts ordered, bodywork 60% complete."],
   ];
   steps.forEach(([delay, status, message]) => {
     setTimeout(() => addStatus(claim.id, status, message), delay);
