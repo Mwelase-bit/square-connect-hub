@@ -105,8 +105,9 @@ function seed(): DB {
 
   const claims: Claim[] = [
     {
-      id: id(), client_id: 1, claim_number: "RSF-CLM-20260821-001", claim_type: "motor", insurer: "Santam",
-      status: "under_assessment", incident_date: dateOnly(-15), incident_time: "07:40",
+      id: id(), client_id: 1, claim_number: "RSF-CLM-20260821-001", claim_handler: "Nomsa Zulu", claim_type: "motor", insurer: "Santam",
+      status: "under_assessment", assessment_date: dateOnly(-6), assessment_time: "09:00", repair_date: "", repair_time: "",
+      incident_date: dateOnly(-15), incident_time: "07:40",
       incident_description: "Rear-ended at a traffic light on William Nicol Drive.",
       police_notified: true, police_case_number: "CAS 224/08/2026",
       witness_name: "Thabo Dlamini", witness_phone: "+27 71 222 3333", witness_statement: true,
@@ -117,8 +118,9 @@ function seed(): DB {
       created_at: iso(-15), updated_at: iso(-2),
     },
     {
-      id: id(), client_id: 2, claim_number: "RSF-CLM-20260903-002", claim_type: "motor", insurer: "Old Mutual",
-      status: "submitted", incident_date: dateOnly(-2), incident_time: "18:15",
+      id: id(), client_id: 2, claim_number: null, claim_handler: "", claim_type: "motor", insurer: "Old Mutual",
+      status: "submitted", assessment_date: "", assessment_time: "", repair_date: "", repair_time: "",
+      incident_date: dateOnly(-2), incident_time: "18:15",
       incident_description: "Minor collision in a shopping centre parking area.",
       police_notified: false, police_case_number: "",
       witness_name: "", witness_phone: "", witness_statement: false,
@@ -129,8 +131,9 @@ function seed(): DB {
       created_at: iso(-2), updated_at: iso(-2),
     },
     {
-      id: id(), client_id: 3, claim_number: "RSF-CLM-20260610-003", claim_type: "motor", insurer: "Santam",
-      status: "completed", incident_date: dateOnly(-85), incident_time: "12:05",
+      id: id(), client_id: 3, claim_number: "RSF-CLM-20260610-003", claim_handler: "Pieter van Wyk", claim_type: "motor", insurer: "Santam",
+      status: "completed", assessment_date: dateOnly(-80), assessment_time: "10:30", repair_date: dateOnly(-55), repair_time: "08:00",
+      incident_date: dateOnly(-85), incident_time: "12:05",
       incident_description: "Hail damage to bonnet and roof.",
       police_notified: false, police_case_number: "",
       witness_name: "", witness_phone: "", witness_statement: false,
@@ -221,6 +224,13 @@ function migrate(db: DB): DB {
     if (c.bank_name === undefined) c.bank_name = "";
     if (c.bank_account_number === undefined) c.bank_account_number = "";
     if (c.bank_branch_code === undefined) c.bank_branch_code = "";
+  }
+  for (const c of db.claims) {
+    if (c.claim_handler === undefined) c.claim_handler = "";
+    if (c.assessment_date === undefined) c.assessment_date = "";
+    if (c.assessment_time === undefined) c.assessment_time = "";
+    if (c.repair_date === undefined) c.repair_date = "";
+    if (c.repair_time === undefined) c.repair_time = "";
   }
   return db;
 }
@@ -424,6 +434,7 @@ export const REMINDER_LABELS: Record<string, string> = {
   annual_review: "Annual review meeting",
   retirement_fee: "Retirement fee renewal",
   birthday: "Birthday / anniversary",
+  claim_update: "Claim update",
 };
 
 export const CLAIM_STAGES: { key: ClaimStatus; label: string }[] = [

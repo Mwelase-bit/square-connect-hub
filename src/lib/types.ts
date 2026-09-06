@@ -60,7 +60,8 @@ export type ReminderType =
   | "valuation_cert"
   | "annual_review"
   | "retirement_fee"
-  | "birthday";
+  | "birthday"
+  | "claim_update";
 
 export interface Reminder {
   id: number;
@@ -128,9 +129,14 @@ export interface Claim {
   id: number;
   client_id: number;
   claim_number: string | null;
+  claim_handler: string;
   claim_type: "motor";
   insurer: string;
   status: ClaimStatus;
+  assessment_date: string;
+  assessment_time: string;
+  repair_date: string;
+  repair_time: string;
   incident_date: string;
   incident_time: string;
   incident_description: string;

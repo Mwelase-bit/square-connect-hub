@@ -1,9 +1,18 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AppShell, Card, btn, btnGhost } from "@/components/AppShell";
+import { AppShell, Card, btn, btnGhost, input, label } from "@/components/AppShell";
+import { rankCarHireProviders, suggestHireCarReturn } from "@/lib/carHire";
+import {
+  completeClaim,
+  postRepairUpdate,
+  recordClaimNumber,
+  scheduleAssessment,
+  scheduleRepair,
+} from "@/lib/claims";
 import { confidenceClass } from "@/lib/ocr";
 import { downloadPdf } from "@/lib/pdf";
 import { CLAIM_STAGES, audit, canAccessClient, update, useDB, useSession } from "@/lib/store";
+import type { Claim } from "@/lib/types";
 
 export const Route = createFileRoute("/claims/$claimId")({
   head: () => ({
@@ -204,8 +213,239 @@ function ClaimDetailPage() {
         </Card>
       )}
 
+      {session.role === "client" && !claim.claim_number && claim.status !== "submitted" && (
+        <ClaimNumberCard claim={claim} />
+      )}
+
+      {session.role === "client" && !!claim.claim_number && !claim.assessment_date && (
+        <ScheduleAssessmentCard claim={claim} />
+      )}
+
+      {session.role === "client" && claim.status === "repair_authorised" && !claim.repair_date && (
+        <ScheduleRepairCard claim={claim} />
+      )}
+
+      {!!claim.repair_date && <CarHireCard claim={claim} clientCity={client?.city ?? ""} />}
+
+      {(session.role === "adviser" || session.role === "admin") && claim.status === "repair_in_progress" && (
+        <RepairUpdateCard claim={claim} />
+      )}
+
       {claim.status === "completed" && <RatingCard claim={claim} />}
     </div>
+  );
+}
+
+function ClaimNumberCard({ claim }: { claim: Claim }) {
+  const [claimNumber, setClaimNumber] = useState("");
+  const [claimHandler, setClaimHandler] = useState("");
+  const [error, setError] = useState("");
+
+  const save = () => {
+    if (!claimNumber.trim() || !claimHandler.trim()) {
+      setError("Please enter both the claim number and the handler's name.");
+      return;
+    }
+    setError("");
+    recordClaimNumber(claim.id, claimNumber, claimHandler);
+  };
+
+  return (
+    <Card title="Record your claim number">
+      <p className="text-sm text-muted-foreground">
+        Once {claim.insurer} contacts you, enter the claim number and claims handler here so it's on record and you
+        get reminders tied to this claim.
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={label} htmlFor="claim_number_input">
+            Claim number
+          </label>
+          <input id="claim_number_input" className={input} value={claimNumber} onChange={(e) => setClaimNumber(e.target.value)} />
+        </div>
+        <div>
+          <label className={label} htmlFor="claim_handler_input">
+            Claims handler's name
+          </label>
+          <input id="claim_handler_input" className={input} value={claimHandler} onChange={(e) => setClaimHandler(e.target.value)} />
+        </div>
+      </div>
+      {error && <p className="mt-3 text-sm font-medium text-danger">{error}</p>}
+      <button className={btn + " mt-4"} onClick={save}>
+        Save
+      </button>
+    </Card>
+  );
+}
+
+function ScheduleAssessmentCard({ claim }: { claim: Claim }) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [error, setError] = useState("");
+
+  const save = () => {
+    if (!date || !time) {
+      setError("Please provide both a date and a time.");
+      return;
+    }
+    setError("");
+    scheduleAssessment(claim.id, date, time);
+  };
+
+  return (
+    <Card title="Book your vehicle in for assessment">
+      <p className="text-sm text-muted-foreground">
+        Tell us when you're taking the vehicle in for assessment. Royal Square and {claim.insurer} will both be
+        notified.
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={label} htmlFor="assessment_date_input">
+            Date
+          </label>
+          <input id="assessment_date_input" type="date" className={input} value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div>
+          <label className={label} htmlFor="assessment_time_input">
+            Time
+          </label>
+          <input id="assessment_time_input" type="time" className={input} value={time} onChange={(e) => setTime(e.target.value)} />
+        </div>
+      </div>
+      {error && <p className="mt-3 text-sm font-medium text-danger">{error}</p>}
+      <button className={btn + " mt-4"} onClick={save}>
+        Confirm assessment booking
+      </button>
+    </Card>
+  );
+}
+
+function ScheduleRepairCard({ claim }: { claim: Claim }) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [error, setError] = useState("");
+
+  const save = () => {
+    if (!date || !time) {
+      setError("Please provide both a date and a time.");
+      return;
+    }
+    setError("");
+    scheduleRepair(claim.id, date, time);
+  };
+
+  return (
+    <Card title="Book your vehicle in for repair">
+      <p className="text-sm text-muted-foreground">
+        Your repair has been authorised. Let us know when the vehicle is going in so we can line up a hire car for
+        you in the meantime.
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={label} htmlFor="repair_date_input">
+            Date
+          </label>
+          <input id="repair_date_input" type="date" className={input} value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div>
+          <label className={label} htmlFor="repair_time_input">
+            Time
+          </label>
+          <input id="repair_time_input" type="time" className={input} value={time} onChange={(e) => setTime(e.target.value)} />
+        </div>
+      </div>
+      {error && <p className="mt-3 text-sm font-medium text-danger">{error}</p>}
+      <button className={btn + " mt-4"} onClick={save}>
+        Confirm repair booking
+      </button>
+    </Card>
+  );
+}
+
+function CarHireCard({ claim, clientCity }: { claim: Claim; clientCity: string }) {
+  const providers = rankCarHireProviders(clientCity);
+  const suggestedReturn = suggestHireCarReturn(claim.repair_date);
+
+  return (
+    <Card title="Hire car while your vehicle is repaired">
+      <p className="text-sm text-muted-foreground">
+        Approved car hire providers you can use in the meantime. Selecting one does not book it — call to arrange
+        collection.
+      </p>
+      {providers.length === 0 ? (
+        <p className="mt-3 rounded-md bg-warning/15 p-3 text-sm font-medium text-warning">
+          No approved car hire partner is on file for your area — contact your adviser directly.
+        </p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {providers.map((p) => (
+            <li key={p.name} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3">
+              <div>
+                <p className="text-sm font-bold">
+                  {p.name}{" "}
+                  <span className="ml-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold uppercase text-success">
+                    Approved
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">From R{p.dailyRate} / day</p>
+              </div>
+              <a href={`tel:${p.phone}`} className={btn}>
+                Call {p.phone}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+      {suggestedReturn && (
+        <p className="mt-3 text-sm font-medium">
+          Suggested hire car return: <strong>{new Date(suggestedReturn).toLocaleDateString("en-ZA")}</strong> — around
+          when your vehicle should be ready for collection. Your adviser's weekly updates below will confirm the
+          actual date.
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function RepairUpdateCard({ claim }: { claim: Claim }) {
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const post = () => {
+    if (!message.trim()) {
+      setError("Please enter an update before posting.");
+      return;
+    }
+    setError("");
+    postRepairUpdate(claim.id, message);
+    setMessage("");
+  };
+
+  return (
+    <Card title="Post a repair update">
+      <p className="text-sm text-muted-foreground">
+        Log the repairer's weekly progress update — the client sees this immediately on their claim timeline.
+      </p>
+      <textarea
+        className={input + " mt-3"}
+        rows={2}
+        placeholder="e.g. Week 2 update: panel work complete, awaiting paint."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+      />
+      {error && <p className="mt-2 text-sm font-medium text-danger">{error}</p>}
+      <div className="mt-3 flex flex-wrap gap-3">
+        <button className={btn} onClick={post}>
+          Post update
+        </button>
+        <button
+          className="rounded-md border border-success px-4 py-3 text-sm font-bold text-success hover:bg-success/10"
+          onClick={() => completeClaim(claim.id)}
+        >
+          Mark repair complete & close claim
+        </button>
+      </div>
+    </Card>
   );
 }
 
