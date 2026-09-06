@@ -150,7 +150,6 @@ export interface Claim {
   third_party_name: string;
   third_party_id: string;
   third_party_licence: string;
-  third_party_registration: string;
   third_party_insurer: string;
   third_party_policy: string;
   signed: boolean;

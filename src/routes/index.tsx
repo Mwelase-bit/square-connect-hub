@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Lock, ShieldCheck, Target, TrendingUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { btn, btnGhost, input, label } from "@/components/AppShell";
 import { audit, getDB, setSession, update } from "@/lib/store";
 
@@ -24,26 +24,6 @@ export const Route = createFileRoute("/")({
 });
 
 type Step = "email" | "otp" | "register";
-type DemoRole = "client" | "adviser" | "admin";
-
-const DEMO_ACCOUNTS: Record<DemoRole, { name: string; email: string }[]> = {
-  client: [
-    { name: "Musa", email: "musa@email.com" },
-    { name: "Jane Doe", email: "jane@email.com" },
-    { name: "Bob Johnson", email: "bob@email.com" },
-  ],
-  adviser: [
-    { name: "Awande Mthembu", email: "awande@royalsquare.co.za" },
-    { name: "Lerato Mokoena", email: "lerato@royalsquare.co.za" },
-  ],
-  admin: [{ name: "Oarabetse", email: "admin@royalsquare.co.za" }],
-};
-
-const ROLE_LABEL: Record<DemoRole, string> = {
-  client: "Client",
-  adviser: "Adviser",
-  admin: "Admin",
-};
 
 const VALUE_PROPS = [
   { icon: TrendingUp, text: "Real-time net worth dashboard for every client" },
@@ -62,16 +42,6 @@ function LoginPage() {
   const [phone, setPhone] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
-  const [ready, setReady] = useState(false);
-  const [demoRole, setDemoRole] = useState<DemoRole | null>(null);
-
-  useEffect(() => setReady(true), []);
-
-  const pickRole = (role: DemoRole) => {
-    setDemoRole(role);
-    setEmail(DEMO_ACCOUNTS[role][0]!.email);
-    setError("");
-  };
 
   const sendOtp = (value: string) => {
     const clean = value.trim().toLowerCase();
@@ -198,54 +168,9 @@ function LoginPage() {
             <div className="mt-5 space-y-4">
               <div>
                 <label className={label} htmlFor="email">Email address</label>
-                <input id="email" className={input} value={email} onChange={(e) => { setEmail(e.target.value); setDemoRole(null); }} placeholder="you@email.com" />
+                <input id="email" className={input} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" />
               </div>
               <button className={btn + " w-full"} onClick={() => sendOtp(email)}>Send my PIN</button>
-
-              {ready && (
-                <div className="border-t border-border pt-4">
-                  <p className={label}>Sign in as (demo)</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(Object.keys(DEMO_ACCOUNTS) as DemoRole[]).map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => pickRole(role)}
-                        className={
-                          "rounded-md border px-3 py-2 text-sm font-bold transition-colors " +
-                          (demoRole === role
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-card hover:bg-muted")
-                        }
-                      >
-                        {ROLE_LABEL[role]}
-                      </button>
-                    ))}
-                  </div>
-                  {demoRole && DEMO_ACCOUNTS[demoRole].length > 1 && (
-                    <select
-                      className={input + " mt-3"}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    >
-                      {DEMO_ACCOUNTS[demoRole].map((a) => (
-                        <option key={a.email} value={a.email}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {demoRole && (
-                    <p className="mt-2 text-xs font-medium text-muted-foreground">
-                      Email filled in above. Select "Send my PIN" to continue as{" "}
-                      <strong className="font-bold text-foreground">
-                        {DEMO_ACCOUNTS[demoRole].find((a) => a.email === email)?.name}
-                      </strong>
-                      .
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           )}
 

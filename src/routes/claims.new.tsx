@@ -82,7 +82,6 @@ function NewClaimPage() {
   const [thirdPartyName, setThirdPartyName] = useState("");
   const [thirdPartyId, setThirdPartyId] = useState("");
   const [thirdPartyLicence, setThirdPartyLicence] = useState("");
-  const [thirdPartyRegistration, setThirdPartyRegistration] = useState("");
   const [thirdPartyInsurer, setThirdPartyInsurer] = useState("");
   const [thirdPartyPolicy, setThirdPartyPolicy] = useState("");
   const [detailsError, setDetailsError] = useState("");
@@ -180,7 +179,6 @@ function NewClaimPage() {
       third_party_name: thirdPartyName.trim(),
       third_party_id: thirdPartyId.trim(),
       third_party_licence: thirdPartyLicence.trim(),
-      third_party_registration: thirdPartyRegistration.trim(),
       third_party_insurer: thirdPartyInsurer.trim(),
       third_party_policy: thirdPartyPolicy.trim(),
       signed: true,
@@ -440,17 +438,6 @@ function NewClaimPage() {
                   className={input}
                   value={thirdPartyLicence}
                   onChange={(e) => setThirdPartyLicence(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className={label} htmlFor="tp_reg">
-                  Registration
-                </label>
-                <input
-                  id="tp_reg"
-                  className={input}
-                  value={thirdPartyRegistration}
-                  onChange={(e) => setThirdPartyRegistration(e.target.value)}
                 />
               </div>
               <div>
