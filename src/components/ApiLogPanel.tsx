@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { useDB } from "@/lib/store";
+import { useDB, useSession } from "@/lib/store";
 
 export function ApiLogPanel() {
   const db = useDB();
+  const session = useSession();
   const [open, setOpen] = useState(false);
+
+  if (!session || session.role === "client") return null;
 
   return (
     <>
