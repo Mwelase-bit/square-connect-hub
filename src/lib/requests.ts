@@ -95,6 +95,12 @@ export function requestTypeConfig(type: RequestType): RequestTypeConfig {
   return REQUEST_TYPES.find((t) => t.key === type)!;
 }
 
+// Address and bank detail changes are no longer offered when creating a new
+// request, but they stay in REQUEST_TYPES above so existing records of those
+// types still display correctly.
+const HIDDEN_FROM_NEW_REQUEST: RequestType[] = ["address_change", "bank_details_change"];
+export const SELECTABLE_REQUEST_TYPES = REQUEST_TYPES.filter((t) => !HIDDEN_FROM_NEW_REQUEST.includes(t.key));
+
 export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
   pending: "Pending",
   approved: "Approved",

@@ -4,7 +4,7 @@ import { AppShell, Card, btn, btnGhost, input, label } from "@/components/AppShe
 import { downloadPdf } from "@/lib/pdf";
 import {
   REQUEST_STATUS_LABEL,
-  REQUEST_TYPES,
+  SELECTABLE_REQUEST_TYPES,
   decideRequest,
   requestTypeConfig,
   submitRequest,
@@ -170,7 +170,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
   const db = useDB();
   const session = useSession()!;
   const client = db.clients.find((c) => c.id === session.userId)!;
-  const [type, setType] = useState<RequestType>(REQUEST_TYPES[0]!.key);
+  const [type, setType] = useState<RequestType>(SELECTABLE_REQUEST_TYPES[0]!.key);
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
 
@@ -239,7 +239,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
             value={type}
             onChange={(e) => changeType(e.target.value as RequestType)}
           >
-            {REQUEST_TYPES.map((t) => (
+            {SELECTABLE_REQUEST_TYPES.map((t) => (
               <option key={t.key} value={t.key}>
                 {t.label}
               </option>

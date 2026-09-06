@@ -21,14 +21,38 @@ export const Route = createFileRoute("/claims/checklist")({
 });
 
 const ITEMS = [
-  "Photos of the road surface and your direction of travel",
-  "The address, or the nearest cross streets",
-  "Photos of all vehicles and people involved",
-  "Licence plates and registration discs of every vehicle",
-  "ID documents of everyone involved",
-  "Witness names and contact details (a voice note helps)",
-  "Insurance details of the other parties",
-  "Report the accident to the police within 48 hours",
+  {
+    title: "Photograph every vehicle",
+    instruction: "Open your phone's camera and take clear photos of each vehicle involved — get close-up shots of exactly where the damage is.",
+  },
+  {
+    title: "Photograph the road and direction of travel",
+    instruction: "Take a wide photo of the road surface, and note which direction each vehicle was travelling before the crash.",
+  },
+  {
+    title: "Record the exact location",
+    instruction: "Take a photo of a street sign, or write down the nearest two cross streets, so the location is on record.",
+  },
+  {
+    title: "Photograph number plates and discs",
+    instruction: "Take a clear, close-up photo of the licence plate and the windscreen registration disc of every vehicle involved.",
+  },
+  {
+    title: "Photograph ID documents",
+    instruction: "Photograph the ID document or driver's licence of everyone involved, including any witnesses.",
+  },
+  {
+    title: "Get witness details",
+    instruction: "Ask any witnesses for their full name and phone number. If they're willing, record a short voice note of what they saw.",
+  },
+  {
+    title: "Write down insurance details",
+    instruction: "Ask the other driver for their insurance company and policy number, and write it down or photograph it.",
+  },
+  {
+    title: "Report it to the police",
+    instruction: "Phone the police to report the accident. South African law requires this within 48 hours.",
+  },
 ];
 
 function ChecklistPage() {
@@ -45,7 +69,8 @@ function ChecklistPage() {
       <div>
         <h1 className="text-2xl font-bold">Step 1 of 4 — At the scene</h1>
         <p className="text-sm text-muted-foreground">
-          This is a guide, not a form. Tick items off as you collect them, then register your claim.
+          If anyone is hurt, call for medical help first. Once everyone is safe, work through this guide — it tells
+          you exactly what to do, in order. Tick each one off as you finish it, then register your claim.
         </p>
       </div>
 
@@ -55,17 +80,22 @@ function ChecklistPage() {
         </div>
         <ul className="space-y-3">
           {ITEMS.map((item, i) => (
-            <li key={item}>
+            <li key={item.title}>
               <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3 text-sm">
                 <input
                   type="checkbox"
-                  className="mt-0.5 h-5 w-5"
+                  className="mt-0.5 h-5 w-5 shrink-0"
                   checked={checked[i]}
                   onChange={(e) =>
                     setChecked((prev) => prev.map((v, idx) => (idx === i ? e.target.checked : v)))
                   }
                 />
-                <span className={checked[i] ? "line-through opacity-60" : ""}>{item}</span>
+                <span className={checked[i] ? "opacity-50" : ""}>
+                  <span className={"block font-bold" + (checked[i] ? " line-through" : "")}>
+                    {i + 1}. {item.title}
+                  </span>
+                  <span className="mt-0.5 block font-medium text-muted-foreground">{item.instruction}</span>
+                </span>
               </label>
             </li>
           ))}

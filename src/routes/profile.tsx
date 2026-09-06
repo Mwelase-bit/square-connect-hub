@@ -240,9 +240,9 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
           {client.address ? `${client.address}, ${client.city} ${client.postal_code}` : "No address on file."}
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
-          Address changes require adviser verification.{" "}
+          Address changes require adviser verification. Contact your adviser directly, or{" "}
           <Link to="/requests" className="font-semibold text-primary underline">
-            Submit a change of address request
+            request a consultation
           </Link>
           .
         </p>
@@ -255,9 +255,9 @@ function ClientProfile({ client }: { client: ReturnType<typeof useDB>["clients"]
             : "No bank details on file."}
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
-          Bank changes require step-up verification and adviser approval.{" "}
+          Bank changes require step-up verification and adviser approval. Contact your adviser directly, or{" "}
           <Link to="/requests" className="font-semibold text-primary underline">
-            Submit a change of bank details request
+            request a consultation
           </Link>
           .
         </p>
